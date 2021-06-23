@@ -1,12 +1,13 @@
 ; Model of Tax evasion
 
- extensions [ gis ]
+extensions [ gis ]
 
 breed[employers employer]             ; employers in the simulation
 breed[auditors auditor]       ; auditors in the simulation
+breed [states-labels states-label ]
 
 globals [
-
+  mx-states
 ]
 
 employers-own [
@@ -15,6 +16,12 @@ employers-own [
 
 auditors-own [
 
+]
+
+patches-own [
+  random-n
+  centroid
+  ID
 ]
 
 ; Some considerations:
@@ -38,8 +45,41 @@ to setup
   reset-ticks
 end
 
+to setup-map
+  ;; Load the dataset
+  set mx-states gis:load-dataset "gis/mxhexbin.shp"
+  ;; set the world envelope
+  gis:set-world-envelope (gis:envelope-of mx-states)
+  ;; Loop through the patches and find centroid and set ID
+  let i 1
+  foreach gis:feature-list-of mx-states [ feature ->
+    ask patches gis:intersecting feature [
+      set centroid gis:location-of gis:centroid-of feature
+      ask patch item 0 centroid item 1 centroid [
+        set ID i
+      ]
+    ]
+    set i i + 1
+  ]
+  ;; Draw the outline of the counties in white
+  gis:set-drawing-color white
+  gis:draw mx-states 2
+
+  ;ask patches with [centroid != 0][
+  ;  set pcolor blue
+  ;]
+
+  ask patches with [ID > 0][
+    gis:set-drawing-color brown
+    gis:fill item (ID - 1)
+    gis:feature-list-of mx-states 2.0
+  ]
+
+
+end
+
 to setup-patches
-  ask patches [   set pcolor gray  ]
+  ask patches [ set pcolor blue  ]
 end
 
 to initialize-variables
@@ -58,7 +98,7 @@ to start-employers [#employers]
     ; set y-position random-pycor * 0.9
     ; setxy x-position y-position
     set color blue
-    set size 1.2
+    set size 0.9
     set shape "factory"
   ]
 
@@ -98,11 +138,11 @@ end
 GRAPHICS-WINDOW
 258
 10
-710
-463
+674
+427
 -1
 -1
-12.0
+8.0
 1
 10
 1
@@ -112,10 +152,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--18
-18
--18
-18
+-25
+25
+-25
+25
 0
 0
 1
@@ -146,16 +186,16 @@ proportion-of-auditors
 proportion-of-auditors
 0
 50
-10.0
+3.0
 1
 1
 %
 HORIZONTAL
 
 BUTTON
-66
+27
 10
-129
+90
 43
 NIL
 setup
@@ -170,9 +210,9 @@ NIL
 1
 
 BUTTON
-137
+162
 10
-200
+225
 43
 NIL
 go
@@ -196,6 +236,23 @@ count auditors
 0
 1
 11
+
+BUTTON
+94
+10
+158
+43
+NIL
+setup-map
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
