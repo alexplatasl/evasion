@@ -2,9 +2,9 @@
 
 extensions [ gis ]
 
-breed[employers employer]             ; employers in the simulation
+breed[employers employer]     ; employers in the simulation
 breed[auditors auditor]       ; auditors in the simulation
-breed [states-labels states-label ]
+
 
 globals [
   mx-states
@@ -19,7 +19,6 @@ auditors-own [
 ]
 
 patches-own [
-  random-n
   centroid
   ID
 ]
@@ -37,6 +36,7 @@ to setup
   clear-all
   ; give properties to the patches
   setup-patches
+  setup-map
   start-employers number-of-employers
   start-auditors number-of-employers * ( proportion-of-auditors / 100)
 
@@ -70,7 +70,7 @@ to setup-map
   ;]
 
   ask patches with [ID > 0][
-    gis:set-drawing-color brown
+    gis:set-drawing-color green
     gis:fill item (ID - 1)
     gis:feature-list-of mx-states 2.0
   ]
@@ -79,7 +79,7 @@ to setup-map
 end
 
 to setup-patches
-  ask patches [ set pcolor blue  ]
+  ask patches [ set pcolor 87  ]
 end
 
 to initialize-variables
@@ -103,23 +103,25 @@ to start-employers [#employers]
   ]
 
   ask employers [
-    move-to one-of patches with [not any? employers-here ]
+    move-to one-of patches with [not any? employers-here and centroid != 0 ]
   ]
 
 end
 
 to start-auditors [#auditors]
   create-auditors #auditors[
-    setxy random-pxcor random-pycor
     set color yellow
     ;set size 1 / log number-of-employers 10
     set shape "person"
   ]
 
+  ask  auditors [
+    move-to one-of patches with [not any? auditors-here and centroid != 0 ]
+  ]
 end
 
 to go
-  if (ticks >= 100 ) [stop]
+  if (ticks >= 120 ) [stop]
   ; Process overview and scheduling
   ; employers-calculate-production
   ; labor-market
@@ -138,11 +140,11 @@ end
 GRAPHICS-WINDOW
 258
 10
-674
-427
+752
+385
 -1
 -1
-8.0
+6.0
 1
 10
 1
@@ -152,10 +154,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--25
-25
--25
-25
+-40
+40
+-30
+30
 0
 0
 1
@@ -171,7 +173,7 @@ number-of-employers
 number-of-employers
 1
 1500
-518.0
+1500.0
 1
 1
 NIL
@@ -236,23 +238,6 @@ count auditors
 0
 1
 11
-
-BUTTON
-94
-10
-158
-43
-NIL
-setup-map
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 @#$#@#$#@
 ## WHAT IS IT?
