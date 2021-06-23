@@ -1,15 +1,15 @@
 ; Model of Tax evasion
 
-; extensions [ R ]
+ extensions [ gis ]
 
-breed[firms firm]             ; firms in the simulation
+breed[employers employer]             ; employers in the simulation
 breed[auditors auditor]       ; auditors in the simulation
 
 globals [
 
 ]
 
-firms-own [
+employers-own [
 
 ]
 
@@ -17,21 +17,34 @@ auditors-own [
 
 ]
 
+; Some considerations:
+; According to INEGI, in 2021, there are 2,591,777 employers
+; 0.10% is 2,592 employers = 1: 1,000
+; 0.05% is 1,296 employers = 1: 2,000
+; 0.02%	is 518 employers   = 1: 5,000
+; 0.01%	is 259 employers   = 1:10,000
+
+
 ; setup procedures
 to setup
   clear-all
-
-  start-firms number-of-firms           ; slider
-  start-auditors number-of-auditors     ; slider
+  ; give properties to the patches
+  setup-patches
+  start-employers number-of-employers
+  start-auditors number-of-employers * ( proportion-of-auditors / 100)
 
   initialize-variables
 
   reset-ticks
 end
 
+to setup-patches
+  ask patches [   set pcolor gray  ]
+end
+
 to initialize-variables
-  ask firms [
-  ; set firms variables
+  ask employers [
+  ; set employers variables
   ]
 
   ask auditors [
@@ -39,8 +52,8 @@ to initialize-variables
   ]
 end
 
-to start-firms [#firms]
-  create-firms #firms [
+to start-employers [#employers]
+  create-employers #employers [
     ; set x-position random-pxcor * 0.9
     ; set y-position random-pycor * 0.9
     ; setxy x-position y-position
@@ -49,8 +62,8 @@ to start-firms [#firms]
     set shape "factory"
   ]
 
-  ask firms [
-    move-to one-of patches with [not any? firms-here ]
+  ask employers [
+    move-to one-of patches with [not any? employers-here ]
   ]
 
 end
@@ -59,7 +72,7 @@ to start-auditors [#auditors]
   create-auditors #auditors[
     setxy random-pxcor random-pycor
     set color yellow
-    set size 1 / log number-of-firms 10
+    ;set size 1 / log number-of-employers 10
     set shape "person"
   ]
 
@@ -68,14 +81,14 @@ end
 to go
   if (ticks >= 100 ) [stop]
   ; Process overview and scheduling
-  ; firms-calculate-production
+  ; employers-calculate-production
   ; labor-market
   ; credit-market
-  ; firms-produce
+  ; employers-produce
   ; goods-market
   ; extortion
-  ; firms-pay
-  ; firms-banks-survive
+  ; employers-pay
+  ; employers-banks-survive
   ; replace-bankrupt
 
   ; update-lorenz-and-gini
@@ -83,13 +96,13 @@ to go
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+258
 10
-647
-448
+710
+463
 -1
 -1
-13.0
+12.0
 1
 10
 1
@@ -99,10 +112,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-18
+18
+-18
+18
 0
 0
 1
@@ -112,13 +125,13 @@ ticks
 SLIDER
 8
 68
-180
+254
 101
-number-of-firms
-number-of-firms
-0
-100
-50.0
+number-of-employers
+number-of-employers
+1
+1500
+518.0
 1
 1
 NIL
@@ -127,22 +140,22 @@ HORIZONTAL
 SLIDER
 8
 110
-180
+168
 143
-number-of-auditors
-number-of-auditors
+proportion-of-auditors
+proportion-of-auditors
 0
-100
-50.0
+50
+10.0
 1
 1
-NIL
+%
 HORIZONTAL
 
 BUTTON
-8
+66
 10
-71
+129
 43
 NIL
 setup
@@ -157,9 +170,9 @@ NIL
 1
 
 BUTTON
-79
+137
 10
-142
+200
 43
 NIL
 go
@@ -172,6 +185,17 @@ NIL
 NIL
 NIL
 0
+
+MONITOR
+171
+105
+254
+150
+No. of auditors
+count auditors
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -317,6 +341,26 @@ Circle -7500403 true true 8 8 285
 Circle -16777216 true false 60 75 60
 Circle -16777216 true false 180 75 60
 Polygon -16777216 true false 150 168 90 184 62 210 47 232 67 244 90 220 109 205 150 198 192 205 210 220 227 242 251 229 236 206 212 183
+
+factory
+false
+0
+Rectangle -7500403 true true 76 194 285 270
+Rectangle -7500403 true true 36 95 59 231
+Rectangle -16777216 true false 90 210 270 240
+Line -7500403 true 90 195 90 255
+Line -7500403 true 120 195 120 255
+Line -7500403 true 150 195 150 240
+Line -7500403 true 180 195 180 255
+Line -7500403 true 210 210 210 240
+Line -7500403 true 240 210 240 240
+Line -7500403 true 90 225 270 225
+Circle -1 true false 37 73 32
+Circle -1 true false 55 38 54
+Circle -1 true false 96 21 42
+Circle -1 true false 105 40 32
+Circle -1 true false 129 19 42
+Rectangle -7500403 true true 14 228 78 270
 
 fish
 false
