@@ -1,6 +1,6 @@
 ; Model of Tax evasion
 
-extensions [ gis table]
+extensions [ gis csv ]
 
 breed[employers employer]     ; employers in the simulation
 breed[auditors auditor]       ; auditors in the simulation
@@ -11,7 +11,15 @@ globals [
 ]
 
 employers-own [
-
+  ent	
+  sex	
+  eda5c	
+  e_con	
+  niv_ins	
+  t_loc	
+  rama	
+  ing7c	
+  mh_col
 ]
 
 auditors-own [
@@ -40,7 +48,8 @@ to setup
   ; give properties to the patches
   setup-patches
   setup-map
-  start-employers number-of-employers
+  ;start-employers number-of-employers
+  setup-employers
   start-auditors number-of-employers * ( proportion-of-auditors / 100)
 
   initialize-variables
@@ -95,18 +104,53 @@ to initialize-variables
   ]
 end
 
-to start-employers [#employers]
-  create-employers #employers [
-    set color blue
-    set size 0.9
-    set shape "factory"
-  ]
+to setup-employers
+  file-close-all
+  file-open "datos/ENOE_employers19.csv"
 
-  ask employers [
-    move-to one-of patches with [not any? employers-here and centroid != 0 ]
-  ]
+  ;; To skip the header row in the while loop,
+  ;  read the header row here to move the cursor
+  ;  down to the next line.
+  let headings csv:from-row file-read-line
+  ;print item 0 headings
 
+  while [ not file-at-end? ] [
+    let data csv:from-row file-read-line
+    ;print data
+    create-employers 1 [
+      ; visual attributes
+      set color blue
+      set size 0.9
+      set shape "factory"
+			; ENOE attributes
+			set ent item 0 data
+			set sex item 1 data
+			set eda5c item 2 data
+      set e_con item 3 data
+			set niv_ins item 4 data
+			set t_loc item 5 data
+      set rama item 6 data
+      set ing7c item 7 data
+			set mh_col item 8 data
+
+      move-to one-of patches with [not any? employers-here and region = [ent] of myself]
+    ]
+  ]
+  file-close-all
 end
+
+;to start-employers [#employers]
+;;  create-employers #employers [
+;    set color blue
+;    set size 0.9
+;    set shape "factory"
+;  ]
+
+;  ask employers [
+;    move-to one-of patches with [not any? employers-here and centroid != 0 ]
+;  ]
+
+;end
 
 to start-auditors [#auditors]
   create-auditors #auditors[
@@ -140,11 +184,11 @@ end
 GRAPHICS-WINDOW
 258
 10
-752
-385
+750
+423
 -1
 -1
-6.0
+4.0
 1
 10
 1
@@ -154,10 +198,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--40
-40
--30
-30
+-60
+60
+-50
+50
 0
 0
 1
@@ -167,7 +211,7 @@ ticks
 SLIDER
 8
 68
-254
+168
 101
 number-of-employers
 number-of-employers
@@ -181,9 +225,9 @@ HORIZONTAL
 
 SLIDER
 8
-110
+120
 168
-143
+153
 proportion-of-auditors
 proportion-of-auditors
 0
@@ -230,11 +274,22 @@ NIL
 
 MONITOR
 171
-105
+115
 254
-150
+160
 No. of auditors
 count auditors
+0
+1
+11
+
+MONITOR
+171
+68
+254
+113
+No. employers
+count employers
 0
 1
 11
