@@ -1,6 +1,6 @@
 ; Model of Tax evasion
 
-extensions [ gis ]
+extensions [ gis table]
 
 breed[employers employer]     ; employers in the simulation
 breed[auditors auditor]       ; auditors in the simulation
@@ -21,6 +21,9 @@ auditors-own [
 patches-own [
   centroid
   ID
+  region
+  state
+  test
 ]
 
 ; Some considerations:
@@ -51,6 +54,8 @@ to setup-map
   ;; set the world envelope
   gis:set-world-envelope (gis:envelope-of mx-states)
   ;; Loop through the patches and find centroid and set ID
+
+
   let i 1
   foreach gis:feature-list-of mx-states [ feature ->
     ask patches gis:intersecting feature [
@@ -65,16 +70,14 @@ to setup-map
   gis:set-drawing-color white
   gis:draw mx-states 2
 
-  ;ask patches with [centroid != 0][
-  ;  set pcolor blue
-  ;]
-
   ask patches with [ID > 0][
     gis:set-drawing-color green
     gis:fill item (ID - 1)
     gis:feature-list-of mx-states 2.0
   ]
 
+  gis:apply-coverage mx-states "TEST" test
+  gis:apply-coverage mx-states "ID" region
 
 end
 
@@ -94,9 +97,6 @@ end
 
 to start-employers [#employers]
   create-employers #employers [
-    ; set x-position random-pxcor * 0.9
-    ; set y-position random-pycor * 0.9
-    ; setxy x-position y-position
     set color blue
     set size 0.9
     set shape "factory"
