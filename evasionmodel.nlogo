@@ -50,7 +50,7 @@ to setup
   setup-map
   ;start-employers number-of-employers
   setup-employers
-  start-auditors number-of-employers * ( proportion-of-auditors / 100)
+  start-auditors count employers * ( proportion-of-auditors / 100)
 
   initialize-variables
 
@@ -139,18 +139,6 @@ to setup-employers
   file-close-all
 end
 
-;to start-employers [#employers]
-;;  create-employers #employers [
-;    set color blue
-;    set size 0.9
-;    set shape "factory"
-;  ]
-
-;  ask employers [
-;    move-to one-of patches with [not any? employers-here and centroid != 0 ]
-;  ]
-
-;end
 
 to start-auditors [#auditors]
   create-auditors #auditors[
@@ -165,6 +153,7 @@ to start-auditors [#auditors]
 end
 
 to go
+  ; A tick will represent a month
   if (ticks >= 120 ) [stop]
   ; Process overview and scheduling
   ; employers-calculate-production
@@ -209,25 +198,10 @@ ticks
 30.0
 
 SLIDER
-8
-68
-168
-101
-number-of-employers
-number-of-employers
-1
-1500
-1500.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-8
-120
-168
-153
+9
+53
+178
+86
 proportion-of-auditors
 proportion-of-auditors
 0
@@ -239,9 +213,9 @@ proportion-of-auditors
 HORIZONTAL
 
 BUTTON
-27
+9
 10
-90
+72
 43
 NIL
 setup
@@ -256,10 +230,10 @@ NIL
 1
 
 BUTTON
-162
-10
-225
-43
+114
+11
+177
+44
 NIL
 go
 T
@@ -273,10 +247,10 @@ NIL
 0
 
 MONITOR
-171
-115
-254
-160
+93
+86
+178
+131
 No. of auditors
 count auditors
 0
@@ -284,10 +258,10 @@ count auditors
 11
 
 MONITOR
-171
-68
-254
-113
+9
+86
+95
+131
 No. employers
 count employers
 0
