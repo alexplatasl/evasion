@@ -194,7 +194,8 @@ to go
   ; A tick will represent a month
   if (ticks >= 120 ) [stop]
   ; Process overview and scheduling
-  ; employers-calculate-production
+  older-people
+  employers-produce
   ; labor-market
   ; credit-market
   ; employers-produce
@@ -206,6 +207,28 @@ to go
 
   ; update-lorenz-and-gini
   tick
+end
+
+to older-people
+  if (ticks > 0 and ticks mod 12 = 0)[
+    ask employers [ set eda eda + 1]
+  ]
+
+end
+
+to employers-produce
+  let avg 2
+  let std-dev 0.1
+  let alpha 3 / 2
+  ask employers [
+    ; Value of informal economy represents around 23% of total economy
+    set prod round ifelse-value (mh_col = 5)[
+      460 * pareto avg (std-dev + 0.1) alpha
+    ][
+      1000 * pareto avg (std-dev + 0.2) alpha
+    ]
+  ]
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -344,6 +367,24 @@ false
 "set-plot-x-range 0 max [prod] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [prod] of employers"
+
+PLOT
+763
+141
+997
+261
+Age distribution
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 max [eda] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [eda] of employers"
 
 @#$#@#$#@
 ## WHAT IS IT?
