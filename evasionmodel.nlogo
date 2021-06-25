@@ -146,7 +146,6 @@ to setup-employers
     [
       file-open "datos/ENOE_employers19_5k.csv"
   ])
-  ;file-open "datos/ENOE_employers19.csv"
 
   ;; To skip the header row in the while loop,
   ;  read the header row here to move the cursor
@@ -183,7 +182,6 @@ end
 to start-auditors [#auditors]
   create-auditors #auditors[
     set color yellow
-    ;set size 1 / log number-of-employers 10
     set shape "person"
   ]
 
