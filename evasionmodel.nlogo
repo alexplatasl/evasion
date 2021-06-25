@@ -100,14 +100,34 @@ to setup-patches
 end
 
 to initialize-variables
+  let avg 2
+  let std-dev 0.1
+  let alpha 3 / 2
   ask employers [
     ; Value of informal economy represents around 23% of total economy
-    set prod ifelse-value (mh_col = 5)[random-normal 435 100][random-normal 1000 100]
+    set prod round ifelse-value (mh_col = 5)[
+      435 * pareto avg std-dev alpha
+    ][
+      1000 * pareto avg std-dev alpha
+    ]
   ]
 
   ask auditors [
   ; set auditors variables
   ]
+end
+
+to-report gibrat [ mn std ]
+  let s2 std ^ 2
+  let x random-normal mn std
+  let first-term 1 / (x * sqrt (2 * pi * s2))
+  let second-term exp (- ((log (x / mn ) 2 ) / (2 * s2 )) )
+  report first-term * second-term
+end
+
+to-report pareto [ mn std alp ]
+  let x random-normal mn std
+  report ( 1 / (x ^ (1 + alp)))
 end
 
 to setup-employers
@@ -307,14 +327,14 @@ CHOOSER
 scale-for-number-of-employers
 scale-for-number-of-employers
 "1:2,000" "1:3,000" "1:4,000" "1:5,000"
-1
+3
 
 PLOT
 763
 13
-963
-163
-plot 1
+998
+133
+Distribution of production
 NIL
 NIL
 0.0
