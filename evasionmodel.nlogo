@@ -11,6 +11,7 @@ globals [
 ]
 
 employers-own [
+  ; from ENOE
   ent	
   sex	
   eda5c	
@@ -20,6 +21,10 @@ employers-own [
   rama	
   ing7c	
   mh_col
+  eda
+
+  ; dummy variables
+  prod
 ]
 
 auditors-own [
@@ -96,7 +101,8 @@ end
 
 to initialize-variables
   ask employers [
-  ; set employers variables
+    ; Value of informal economy represents around 23% of total economy
+    set prod ifelse-value (mh_col = 5)[random-normal 435 100][random-normal 1000 100]
   ]
 
   ask auditors [
@@ -106,13 +112,26 @@ end
 
 to setup-employers
   file-close-all
-  file-open "datos/ENOE_employers19.csv"
+  (ifelse
+    scale-for-number-of-employers = "1:2,000" [
+      file-open "datos/ENOE_employers19_2k.csv"
+    ]
+    scale-for-number-of-employers = "1:3,000" [
+      file-open "datos/ENOE_employers19_3k.csv"
+    ]
+    scale-for-number-of-employers = "1:4,000" [
+      file-open "datos/ENOE_employers19_4k.csv"
+    ]
+    ; elsecommands
+    [
+      file-open "datos/ENOE_employers19_5k.csv"
+  ])
+  ;file-open "datos/ENOE_employers19.csv"
 
   ;; To skip the header row in the while loop,
   ;  read the header row here to move the cursor
   ;  down to the next line.
   let headings csv:from-row file-read-line
-  ;print item 0 headings
 
   while [ not file-at-end? ] [
     let data csv:from-row file-read-line
@@ -132,6 +151,7 @@ to setup-employers
       set rama item 6 data
       set ing7c item 7 data
 			set mh_col item 8 data
+      set eda item 9 data
 
       move-to one-of patches with [not any? employers-here and region = [ent] of myself]
     ]
@@ -198,10 +218,10 @@ ticks
 30.0
 
 SLIDER
-9
-53
-178
-86
+8
+97
+177
+130
 proportion-of-auditors
 proportion-of-auditors
 0
@@ -247,10 +267,10 @@ NIL
 0
 
 MONITOR
-93
-86
-178
-131
+92
+130
+177
+175
 No. of auditors
 count auditors
 0
@@ -258,15 +278,54 @@ count auditors
 11
 
 MONITOR
-9
-86
-95
-131
+8
+130
+94
+175
 No. employers
 count employers
 0
 1
 11
+
+MONITOR
+8
+184
+178
+229
+GDP of informal economy (%)
+100 * ( sum [prod] of employers with [mh_col = 5] / sum [prod] of employers)
+2
+1
+11
+
+CHOOSER
+8
+49
+211
+94
+scale-for-number-of-employers
+scale-for-number-of-employers
+"1:2,000" "1:3,000" "1:4,000" "1:5,000"
+1
+
+PLOT
+763
+13
+963
+163
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 max [prod] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [prod] of employers"
 
 @#$#@#$#@
 ## WHAT IS IT?
