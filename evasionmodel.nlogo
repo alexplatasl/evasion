@@ -106,9 +106,9 @@ to initialize-variables
   ask employers [
     ; Value of informal economy represents around 23% of total economy
     set prod round ifelse-value (mh_col = 5)[
-      435 * pareto avg std-dev alpha
+      460 * pareto avg (std-dev + 0.1) alpha
     ][
-      1000 * pareto avg std-dev alpha
+      1000 * pareto avg (std-dev + 0.2) alpha
     ]
   ]
 
