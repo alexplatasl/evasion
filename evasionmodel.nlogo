@@ -1,42 +1,72 @@
 ; Model of Tax evasion
 
-extensions [ gis csv ]
+extensions [ gis csv R ]
 
 breed[employers employer]     ; employers in the simulation
 breed[auditors auditor]       ; auditors in the simulation
 
-
+;-----------------------------------------------------------------------
+; Variable definitions
 globals [
   mx-states
 ]
 
 employers-own [
   ; from ENOE
+  t_loc	
   ent	
   sex	
-  eda5c	
+  eda	
+  n_hij	
   e_con	
-  niv_ins	
-  t_loc	
-  rama	
+  salario	
+  c_ocu11c	
   ing7c	
-  mh_col
-  eda
+  dur9c	
+  ambito2	
+  anios_esc	
+  hrsocup	
+  ingocup	
+  tcco	
+  scian	
+  mh_col	
+  year
+  tax
+  Corrupción
+  Inseguridad
 
-  ; dummy variables
-  prod
+  ; simulation variables
+  production            ; value produced in period
+  payroll               ; payroll
+  payroll*              ; declared payroll
+  utility               ; utility due production
+  utility-evasion       ; utility due evasion
+  utility-total         ; utility due production + utility due evasion
+  prob-formal           ; Probability of being formal employer
+  risk-aversion-ρ       ; Risk aversion
+  audited?              ; Employer was audited?
+  s-α                   ; Subjective audit probability
+  δ                     ; updating parameter for s-α
+  ATPNI                 ; After Tax and Penalties Net Income
+  utility-U             ; [0,1] optimized Utility
 ]
 
 auditors-own [
-
+  ent-auditor           ; Where do they audit?
+  my-employers          ; Who do they audit?
+  tax-collected         ; How much did they collect in taxes?
+  penalty-collected     ; How much did they collect for penalties?
 ]
 
 patches-own [
+  ; GIS Layer variables
   centroid
   ID
   region
-  state
-  test
+
+  tax-ent               ; Tax rate in each state
+  Corrupción-ent        ; Perceived level of corruption (ENCIG)
+  Inseguridad-ent       ; Perceived insecurity level (ENCIG)
 ]
 
 ; Some considerations:
@@ -46,20 +76,37 @@ patches-own [
 ; 0.02%	is 518 employers   = 1: 5,000
 ; 0.01%	is 259 employers   = 1:10,000
 
-
+;-----------------------------------------------------------------------
 ; setup procedures
 to setup
   clear-all
-  ; give properties to the patches
+  ;; clear the R workspace
+  r:clear
+
+  ; Load ML model
+  setup-ML
+
+  ; Set properties to the patches and agents
   setup-patches
   setup-map
-  ;start-employers number-of-employers
   setup-employers
-  start-auditors count employers * ( proportion-of-auditors / 100)
-
+  start-auditors 32
   initialize-variables
 
   reset-ticks
+end
+
+to setup-ML
+  ; Load packages
+  r:eval "library(ranger)"
+  r:eval "library(readr)"
+  ;rfmodel2 - regression
+  ;rfmodel1 - classification
+  r:eval "rf <- readRDS('D:/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
+end
+
+to setup-patches
+  ask patches [ set pcolor 87  ]
 end
 
 to setup-map
@@ -90,44 +137,10 @@ to setup-map
     gis:feature-list-of mx-states 2.0
   ]
 
-  gis:apply-coverage mx-states "TEST" test
   gis:apply-coverage mx-states "ID" region
-
-end
-
-to setup-patches
-  ask patches [ set pcolor 87  ]
-end
-
-to initialize-variables
-  let avg 2
-  let std-dev 0.1
-  let alpha 3 / 2
-  ask employers [
-    ; Value of informal economy represents around 23% of total economy
-    set prod round ifelse-value (mh_col = 5)[
-      460 * pareto avg (std-dev + 0.1) alpha
-    ][
-      1000 * pareto avg (std-dev + 0.2) alpha
-    ]
-  ]
-
-  ask auditors [
-  ; set auditors variables
-  ]
-end
-
-to-report gibrat [ mn std ]
-  let s2 std ^ 2
-  let x random-normal mn std
-  let first-term 1 / (x * sqrt (2 * pi * s2))
-  let second-term exp (- ((log (x / mn ) 2 ) / (2 * s2 )) )
-  report first-term * second-term
-end
-
-to-report pareto [ mn std alp ]
-  let x random-normal mn std
-  report ( 1 / (x ^ (1 + alp)))
+  gis:apply-coverage mx-states "TAX" tax-ent
+  gis:apply-coverage mx-states "CORRUPCION" Corrupción-ent
+  gis:apply-coverage mx-states "INSEGURIDA" Inseguridad-ent
 end
 
 to setup-employers
@@ -142,10 +155,14 @@ to setup-employers
     scale-for-number-of-employers = "1:4,000" [
       file-open "datos/ENOE_employers19_4k.csv"
     ]
+    scale-for-number-of-employers = "1:5,000" [
+      file-open "datos/ENOE_employers19_5k.csv"
+    ]
     ; elsecommands
     [
-      file-open "datos/ENOE_employers19_5k.csv"
-  ])
+      file-open "datos/ENOE_employers19_test.csv"
+    ]
+  )
 
   ;; To skip the header row in the while loop,
   ;  read the header row here to move the cursor
@@ -161,74 +178,308 @@ to setup-employers
       set size 0.9
       set shape "factory"
 			; ENOE attributes
-			set ent item 0 data
-			set sex item 1 data
-			set eda5c item 2 data
-      set e_con item 3 data
-			set niv_ins item 4 data
-			set t_loc item 5 data
-      set rama item 6 data
-      set ing7c item 7 data
-			set mh_col item 8 data
-      set eda item 9 data
+      set t_loc	item 0 data
+      set ent	item 1 data
+      set sex	item 2 data
+      set eda	item 3 data
+      set n_hij	item 4 data
+      set e_con	item 5 data
+      set salario	item 6 data
+      set c_ocu11c	item 7 data
+      set ing7c	item 8 data
+      set dur9c	item 9 data
+      set ambito2	item 10 data
+      set anios_esc	item 11 data
+      set hrsocup	item 12 data
+      set ingocup	item 13 data
+      set tcco item 14 data
+      set scian	item 15 data
+      set mh_col item 16 data
 
       move-to one-of patches with [not any? employers-here and region = [ent] of myself]
     ]
   ]
   file-close-all
-end
 
+  ask employers with [mh_col = 0][set color red]
+end
 
 to start-auditors [#auditors]
   create-auditors #auditors[
     set color yellow
     set shape "person"
+    set size 2
+    set ent-auditor who - count employers + 1
   ]
 
   ask  auditors [
-    move-to one-of patches with [not any? auditors-here and centroid != 0 ]
+    move-to one-of patches with [not any? auditors-here and region = [ent-auditor] of myself]
   ]
 end
+
+to initialize-variables
+  let avg 2
+  let std-dev 0.1
+  let alpha 3 / 2
+  ask employers [
+    ; Value of informal economy represents around 23% of total economy
+    set production round ifelse-value (mh_col = 0)[
+      23.00 * pareto avg (std-dev + 0.1) alpha
+    ][
+      50.00 * pareto avg (std-dev + 0.2) alpha
+    ]
+    ; Participacion of salaries in PIB are around %30 and %40
+    set payroll floor production * 0.30
+    set payroll* payroll ; At the beggining no employers evade
+    set utility production - payroll
+    set utility-evasion payroll - payroll*
+    set utility-total utility + utility-evasion
+    set prob-formal random-float 1    ; At the beggining is random
+    set s-α α ; Typically we assume p = ps
+    set δ -0.1
+    set risk-aversion-ρ social-norm eda
+    set audited? false
+
+    ;Updated after tax-audit
+    ;ATPNI
+    ;utility-U
+
+    ; Get propeeties from state (patch)
+    set tax [tax-ent] of patch-here + Δθ
+    set Corrupción [Corrupción-ent] of patch-here + ( ΔPC / 100 )
+    set Inseguridad [Inseguridad-ent] of patch-here + ( ΔPI / 100 )
+
+  ]
+
+  ask auditors [
+    set my-employers employers with [ent = [ent-auditor] of myself]
+    set tax-collected 0
+    set penalty-collected 0
+  ]
+
+end
+
+;-----------------------------------------------------------------------
+; Go procedure
 
 to go
   ; A tick will represent a month
   if (ticks >= 120 ) [stop]
   ; Process overview and scheduling
-  older-people
-  employers-produce
-  ; labor-market
-  ; credit-market
-  ; employers-produce
-  ; goods-market
-  ; extortion
-  ; employers-pay
-  ; employers-banks-survive
-  ; replace-bankrupt
+  choose-market
+  ;employers-produce
+  calculate-utility
+  tax-collection
+  tax-audit
+  age-increase
+  adjust-subjetive
 
-  ; update-lorenz-and-gini
   tick
 end
 
-to older-people
+to choose-market
   if (ticks > 0 and ticks mod 12 = 0)[
-    ask employers [ set eda eda + 1]
+    ask employers [
+      (r:putagentdf "newdata" self "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
+      r:eval "predict <- predict(rf, data = newdata)"
+      let probability r:get "predict$predictions"
+      set prob-formal probability
+      set mh_col ifelse-value (probability > τ ) [1] [0]
+      ;set mh_col r:get "predict$predictions"
+    ]
+  ]
+end
+
+to tax-collection
+  ask auditors [
+    set tax-collected sum [payroll*] of my-employers
+  ]
+end
+
+to tax-audit
+  ask auditors [
+    ;move-to one-of neighbors with [region = [ent-auditor] of myself]
+    let my-audited-employer one-of my-employers
+    ; IF:
+    ;    any employer found
+    ;    AND employer evaded an amount
+    ;    AND audit process is succesfull
+    if (;any? my-audited-employer and item 0
+      ([utility-evasion] of my-audited-employer) > 0 and ε-ap > random-float 1)[
+      ; Just one period and one employer collected
+      set penalty-collected (1 + π) * [utility-evasion] of my-audited-employer
+    ]
+
+    ask my-audited-employer [
+      set audited? true
+      set s-α 1
+      set utility-evasion 0
+      set utility utility - ( π * payroll* )
+    ]
+
+  ]
+end
+
+to calculate-utility
+
+  ask employers with [audited?][
+    let T sum [tax-collected] of auditors with [ent-auditor = [ent] of myself]
+    let P sum [penalty-collected] of auditors with [ent-auditor = [ent] of myself]
+    let PG T + P
+    let I payroll
+    let θ tax
+    let X prob-formal * I
+    let β 1 - Inseguridad
+    let PG-i PG - (θ * X) - π * (I - X)
+    let net-income I - (θ * X) + β * ((θ * X ) * (1 - ε-tc) + PG-i)
+
+    set ATPNI ATPNI - (1 - β * (1 - ε-ap)) * ( π * (I - X))
+    set payroll* X
+    set utility production - payroll
+    set utility-evasion payroll - payroll*
+    set utility-total utility + utility-evasion
+    set utility-U 1 - exp (- risk-aversion-ρ * ATPNI)
+  ]
+
+  ask employers with [not audited?][
+    let T sum [tax-collected] of auditors with [ent-auditor = [ent] of myself]
+    let P sum [penalty-collected] of auditors with [ent-auditor = [ent] of myself]
+    let PG T + P
+    let I payroll
+    let θ tax
+    let X prob-formal * I
+    let β 1 - Inseguridad
+    let PG-i PG - (θ * X) - π * (I - X)
+
+    set ATPNI I - (θ * X) + β * ((θ * X ) * (1 - ε-tc) + PG-i)
+    set payroll* X
+    set utility production - payroll
+    set utility-evasion payroll - payroll*
+    set utility-total utility + utility-evasion
+    set utility-U 1 - exp (- risk-aversion-ρ * ATPNI)
   ]
 
 end
 
+to adjust-subjetive
+  ask employers with [s-α > α][
+    set s-α s-α + δ
+  ]
+
+  ask employers with [s-α < α][
+    set s-α α
+    set audited? false
+  ]
+end
+
+to calculate-utility2
+  let PG sum [payroll] of employers
+  ask employers [
+    let W payroll
+    let θ tax
+    let X prob-formal * payroll
+    set payroll* X
+    set utility-evasion payroll - payroll*
+    let β Inseguridad
+    let PG-i PG - W
+    set risk-aversion-ρ social-norm eda
+    ; after tax and penalties net income
+    if (s-α > random-float 1)[
+      set audited? true
+      ; no audit
+      set ATPNI W - ( θ * X ) + β * ((θ * X ) * (1 - ε-tc) + PG-i)
+      ; audit
+      set ATPNI ATPNI - (1 - β * (1 - ε-ap)) * ( π * (W - X))
+    ]
+    ; no audit
+    set audited? false
+    set ATPNI W - ( θ * X ) + β * ((θ * X ) * (1 - ε-tc) + PG-i)
+    set utility-U 1 - exp (- risk-aversion-ρ * ATPNI)
+    if (utility-U < 1)[
+      print utility-U
+    ]
+  ]
+end
+
+
+to age-increase
+  ; Increase age of employers each 12 months
+  if (ticks > 0 and ticks mod 12 = 0)[
+    ask employers [
+      set eda eda + 1
+      if (eda > 100)[
+        set eda random-normal 37 6
+      ]
+    ]
+  ]
+  ; In Mexico, lifetime expentancy at birth is 75 years
+  ; https://www.ssa.gov/oact/STATS/table4c6.html#fn1
+  ; https://math.stackexchange.com/questions/51230/quantile-function-with-normal-distribution-and-weibull-distribution
+  ; Weibull quantile derivation:
+  ; Q(p) = λ * (log(1 / 1 - (1 - p)))^(1/k) where λ scale parameter, and k is shape parameter
+  let λ 0.01973383
+  let k 0.4792089
+  ask employers [
+    let p eda / 110
+    let Qp λ * (ln((1 / p)))^(1 / k)
+    if (random-float 1 < Qp )[
+      set eda random-normal 37 6
+    ]
+  ]
+end
+
+
+; deprecated
 to employers-produce
   let avg 2
   let std-dev 0.1
   let alpha 3 / 2
   ask employers [
     ; Value of informal economy represents around 23% of total economy
-    set prod round ifelse-value (mh_col = 5)[
-      460 * pareto avg (std-dev + 0.1) alpha
+    set payroll round ifelse-value (mh_col = 0)[
+      payroll
     ][
-      1000 * pareto avg (std-dev + 0.2) alpha
+      ; formal sector is more productive according to Julio C. Leal-Ordoñez (2013)
+      ; "Tax Collection, The Informal Sector, and Productivity"
+      payroll
     ]
+    ;set payroll* payroll
   ]
 
+end
+
+
+;-----------------------------------------------------------------------
+; reporters
+
+to-report gibrat [ mn std ]
+  let s2 std ^ 2
+  let x random-normal mn std
+  let first-term 1 / (x * sqrt (2 * pi * s2))
+  let second-term exp (- ((log (x / mn ) 2 ) / (2 * s2 )) )
+  report first-term * second-term
+end
+
+to-report pareto [ mn std alp ]
+  let x random-normal mn std
+  report ( 1 / (x ^ (1 + alp)))
+end
+
+to-report social-norm [age]
+  (ifelse
+    age <= 34 [
+      report random-float 0.25
+    ]
+    age <= 51 [
+      report 0.25 + random-float 0.25
+    ]
+    age <= 67 [
+      report 0.50 + random-float 0.25
+    ]
+    ; elsecommands
+    [
+      report 0.75 + random-float 0.25
+  ])
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -257,21 +508,6 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
-
-SLIDER
-8
-97
-177
-130
-proportion-of-auditors
-proportion-of-auditors
-0
-50
-3.0
-1
-1
-%
-HORIZONTAL
 
 BUTTON
 9
@@ -308,21 +544,21 @@ NIL
 0
 
 MONITOR
-92
-130
-177
-175
-No. of auditors
+918
+311
+997
+356
+No. auditors
 count auditors
 0
 1
 11
 
 MONITOR
-8
-130
-94
-175
+763
+261
+849
+306
 No. employers
 count employers
 0
@@ -330,12 +566,12 @@ count employers
 11
 
 MONITOR
-8
-184
-178
-229
+763
+311
+917
+356
 GDP of informal economy (%)
-100 * ( sum [prod] of employers with [mh_col = 5] / sum [prod] of employers)
+100 * ( sum [payroll] of employers with [mh_col = 0] / sum [payroll] of employers)
 2
 1
 11
@@ -347,15 +583,15 @@ CHOOSER
 94
 scale-for-number-of-employers
 scale-for-number-of-employers
-"1:2,000" "1:3,000" "1:4,000" "1:5,000"
-3
+"1:2,000" "1:3,000" "1:4,000" "1:5,000" "test"
+0
 
 PLOT
 763
 13
 998
 133
-Distribution of production
+Distribution of payroll
 NIL
 NIL
 0.0
@@ -364,15 +600,15 @@ NIL
 10.0
 true
 false
-"set-plot-x-range 0 max [prod] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
+"set-plot-x-range 0 round max [payroll] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [prod] of employers"
+"default" 1.0 1 -16777216 true "" "histogram [payroll] of employers"
 
 PLOT
 763
-141
-997
-261
+135
+998
+255
 Age distribution
 NIL
 NIL
@@ -382,9 +618,340 @@ NIL
 10.0
 true
 false
-"set-plot-x-range 0 max [eda] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
+"set-plot-x-range 18 101\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [eda] of employers"
+
+SLIDER
+14
+426
+127
+459
+τ
+τ
+0
+1
+0.5
+0.01
+1
+NIL
+HORIZONTAL
+
+MONITOR
+850
+261
+997
+306
+% of informal employers
+100 * ( count employers with [mh_col = 0] / count employers)
+2
+1
+11
+
+SLIDER
+8
+120
+128
+153
+π
+π
+0.1
+1
+0.5
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+8
+157
+128
+190
+α
+α
+0
+1
+0.1
+0.01
+1
+NIL
+HORIZONTAL
+
+PLOT
+1000
+13
+1234
+133
+Probability X
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 1\nset-plot-y-range 0 1\nset-histogram-num-bars sqrt count employers" "set-plot-y-range 0 1"
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [prob-formal] of employers"
+
+SLIDER
+11
+215
+126
+248
+ε-ap
+ε-ap
+0
+1
+0.75
+0.01
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+11
+198
+161
+216
+Effectiveness of
+11
+0.0
+1
+
+TEXTBOX
+136
+225
+249
+243
+Audit process
+11
+0.0
+1
+
+SLIDER
+11
+251
+126
+284
+ε-tc
+ε-tc
+0
+1
+0.7
+0.01
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+135
+261
+250
+279
+Tax collection
+11
+0.0
+1
+
+PLOT
+1000
+135
+1234
+255
+utility-U
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 1.1\nset-plot-y-range 0 1\nset-histogram-num-bars sqrt count employers" "set-plot-y-range 0 1"
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [utility-U] of employers"
+
+PLOT
+1235
+13
+1469
+133
+The Extent of Tax Evasion
+month
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot 1 - (sum [payroll*] of employers / sum [payroll] of employers)"
+
+PLOT
+1235
+135
+1469
+255
+Collected penalties
+month
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 120" ""
+PENS
+"Penalties" 1.0 0 -955883 true "" "plot sum [penalty-collected] of auditors"
+
+PLOT
+1000
+257
+1234
+377
+Collected tax
+month
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 120" ""
+PENS
+"default" 1.0 0 -14835848 true "" "plot sum [tax-collected] of auditors"
+
+TEXTBOX
+11
+293
+161
+311
+decrease / increase 
+11
+0.0
+1
+
+SLIDER
+14
+312
+127
+345
+Δθ
+Δθ
+-1
+3
+0.0
+0.5
+1
+%
+HORIZONTAL
+
+SLIDER
+14
+348
+127
+381
+ΔPI
+ΔPI
+-15
+15
+0.0
+1
+1
+%
+HORIZONTAL
+
+TEXTBOX
+136
+322
+249
+340
+Tax rate
+11
+0.0
+1
+
+TEXTBOX
+136
+358
+248
+380
+Perceived insecurity\n
+11
+0.0
+1
+
+TEXTBOX
+10
+103
+160
+121
+Fiscal environment
+11
+0.0
+1
+
+TEXTBOX
+137
+130
+249
+148
+Penalty rate
+11
+0.0
+1
+
+TEXTBOX
+137
+167
+249
+185
+Audit probability
+11
+0.0
+1
+
+SLIDER
+14
+384
+127
+417
+ΔPC
+ΔPC
+-15
+15
+15.0
+1
+1
+%
+HORIZONTAL
+
+TEXTBOX
+136
+394
+250
+412
+Perceived corruption
+11
+0.0
+1
+
+TEXTBOX
+136
+431
+250
+459
+Decision threshold\nto be in formal sector
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
