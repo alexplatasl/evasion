@@ -163,7 +163,16 @@ to setup-map
       ]
     )
   ]
+  ; legend text
+  ask patches with [pxcor = 49 and pycor = 43][
+    set plabel "High"
+    set plabel-color 1
+  ]
 
+  ask patches with [pxcor = 49 and pycor = 25][
+    set plabel "Low"
+    set plabel-color 1
+  ]
 
 end
 
