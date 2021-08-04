@@ -140,11 +140,30 @@ to setup-map
     set pcolor green
   ]
 
-  ;ask patches with [ID > 0][
-  ;gis:set-drawing-color green
-    ;gis:fill item (ID - 1)
-    ;gis:feature-list-of mx-states 2.0
-  ;]
+  ; legend colors
+  ask patches with [pxcor > 40 and pxcor < 44 and pycor > 24 and pycor < 44][
+    (ifelse
+      color-palette = "viridis" [
+        set pcolor palette:scale-gradient [[253 231 37] [33 145 140] [68 1 84] ] pycor 24 44
+      ]
+      color-palette = "inferno" [
+        set pcolor palette:scale-gradient [[252 255 164] [188 55 84] [0 0 4]] pycor 24 44
+      ]
+      color-palette = "magma" [
+        set pcolor palette:scale-gradient [[252 253 191] [183 55 121] [0 0 4]] pycor 24 44
+      ]
+      color-palette = "plasma" [
+        set pcolor palette:scale-gradient [[240 249 33] [204 71 120] [13 8 135]] pycor 24 44
+      ]
+      color-palette = "cividis" [
+        set pcolor palette:scale-gradient [[255 234 70] [124 123 120] [0 32 77]] pycor 24 44
+      ]
+      color-palette = "parula" [
+        set pcolor palette:scale-gradient [[249 251 14] [51 183 160] [53 42 135]] pycor 24 44
+      ]
+    )
+  ]
+
 
 end
 
@@ -434,6 +453,7 @@ to paint-patches
     )
 
   ]
+
 end
 
 
