@@ -1,6 +1,6 @@
 ; Model of Tax evasion
 
-extensions [ gis csv R ]
+extensions [ gis csv R palette ]
 
 breed[employers employer]     ; employers in the simulation
 breed[auditors auditor]       ; auditors in the simulation
@@ -131,16 +131,21 @@ to setup-map
   gis:set-drawing-color white
   gis:draw mx-states 2
 
-  ask patches with [ID > 0][
-    gis:set-drawing-color green
-    gis:fill item (ID - 1)
-    gis:feature-list-of mx-states 2.0
-  ]
-
   gis:apply-coverage mx-states "ID" region
   gis:apply-coverage mx-states "TAX" tax-ent
   gis:apply-coverage mx-states "CORRUPCION" Corrupción-ent
   gis:apply-coverage mx-states "INSEGURIDA" Inseguridad-ent
+
+  ask patches with [region > 0 or region < 0 or region = 0][
+    set pcolor green
+  ]
+
+  ;ask patches with [ID > 0][
+  ;gis:set-drawing-color green
+    ;gis:fill item (ID - 1)
+    ;gis:feature-list-of mx-states 2.0
+  ;]
+
 end
 
 to setup-employers
@@ -273,6 +278,7 @@ to go
   tax-audit
   age-increase
   adjust-subjetive
+  paint-patches
 
   tick
 end
@@ -372,36 +378,6 @@ to adjust-subjetive
   ]
 end
 
-to calculate-utility2
-  let PG sum [payroll] of employers
-  ask employers [
-    let W payroll
-    let θ tax
-    let X prob-formal * payroll
-    set payroll* X
-    set utility-evasion payroll - payroll*
-    let β Inseguridad
-    let PG-i PG - W
-    set risk-aversion-ρ social-norm eda
-    ; after tax and penalties net income
-    if (s-α > random-float 1)[
-      set audited? true
-      ; no audit
-      set ATPNI W - ( θ * X ) + β * ((θ * X ) * (1 - ε-tc) + PG-i)
-      ; audit
-      set ATPNI ATPNI - (1 - β * (1 - ε-ap)) * ( π * (W - X))
-    ]
-    ; no audit
-    set audited? false
-    set ATPNI W - ( θ * X ) + β * ((θ * X ) * (1 - ε-tc) + PG-i)
-    set utility-U 1 - exp (- risk-aversion-ρ * ATPNI)
-    if (utility-U < 1)[
-      print utility-U
-    ]
-  ]
-end
-
-
 to age-increase
   ; Increase age of employers each 12 months
   if (ticks > 0 and ticks mod 12 = 0)[
@@ -428,24 +404,36 @@ to age-increase
   ]
 end
 
+to paint-patches
+  let max-collection max [tax-collected + penalty-collected] of auditors
+  let min-collection min [tax-collected + penalty-collected] of auditors
+  ask patches with [region > 0 or region < 0 or region = 0][
+    let taxes sum [tax-collected] of auditors with [ent-auditor = [region] of myself]
+    let penalties sum [penalty-collected] of auditors with [ent-auditor = [region] of myself]
+    let taxes+penalties taxes + penalties
 
-; deprecated
-to employers-produce
-  let avg 2
-  let std-dev 0.1
-  let alpha 3 / 2
-  ask employers [
-    ; Value of informal economy represents around 23% of total economy
-    set payroll round ifelse-value (mh_col = 0)[
-      payroll
-    ][
-      ; formal sector is more productive according to Julio C. Leal-Ordoñez (2013)
-      ; "Tax Collection, The Informal Sector, and Productivity"
-      payroll
-    ]
-    ;set payroll* payroll
+    (ifelse
+      color-palette = "viridis" [
+        set pcolor palette:scale-gradient [[253 231 37] [33 145 140] [68 1 84] ] taxes+penalties min-collection max-collection
+      ]
+      color-palette = "inferno" [
+        set pcolor palette:scale-gradient [[252 255 164] [188 55 84] [0 0 4]] taxes+penalties min-collection max-collection
+      ]
+      color-palette = "magma" [
+        set pcolor palette:scale-gradient [[252 253 191] [183 55 121] [0 0 4]] taxes+penalties min-collection max-collection
+      ]
+      color-palette = "plasma" [
+        set pcolor palette:scale-gradient [[240 249 33] [204 71 120] [13 8 135]] taxes+penalties min-collection max-collection
+      ]
+      color-palette = "cividis" [
+        set pcolor palette:scale-gradient [[255 234 70] [124 123 120] [0 32 77]] taxes+penalties min-collection max-collection
+      ]
+      color-palette = "parula" [
+        set pcolor palette:scale-gradient [[249 251 14] [51 183 160] [53 42 135]] taxes+penalties min-collection max-collection
+      ]
+    )
+
   ]
-
 end
 
 
@@ -624,9 +612,9 @@ PENS
 
 SLIDER
 14
-426
+420
 127
-459
+453
 τ
 τ
 0
@@ -927,7 +915,7 @@ SLIDER
 ΔPC
 -15
 15
-15.0
+-15.0
 1
 1
 %
@@ -945,13 +933,33 @@ Perceived corruption
 
 TEXTBOX
 136
-431
+425
 250
-459
+453
 Decision threshold\nto be in formal sector
 11
 0.0
 1
+
+TEXTBOX
+272
+432
+399
+460
+Visualization of tax collected
+11
+0.0
+1
+
+CHOOSER
+368
+427
+506
+472
+color-palette
+color-palette
+"viridis" "inferno" "magma" "plasma" "cividis" "parula"
+5
 
 @#$#@#$#@
 ## WHAT IS IT?
