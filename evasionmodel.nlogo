@@ -463,6 +463,17 @@ to paint-patches
 
   ]
 
+  ; legend text
+  ask patches with [pxcor = 49 and pycor = 43][
+    set plabel floor max-collection
+    set plabel-color 1
+  ]
+
+  ask patches with [pxcor = 49 and pycor = 25][
+    set plabel floor min-collection
+    set plabel-color 1
+  ]
+
 end
 
 
@@ -944,7 +955,7 @@ SLIDER
 ΔPC
 -15
 15
--15.0
+0.0
 1
 1
 %
@@ -975,7 +986,7 @@ TEXTBOX
 432
 399
 460
-Visualization of tax collected
+Visualization of tax collection
 11
 0.0
 1
