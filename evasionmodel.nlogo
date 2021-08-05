@@ -146,6 +146,8 @@ to setup-map
 
 end
 
+
+
 to setup-employers
   file-close-all
   (ifelse
@@ -209,14 +211,22 @@ end
 
 to start-auditors [#auditors]
   create-auditors #auditors[
-    set color yellow
+    set color white
     set shape "person"
-    set size 2
-    set ent-auditor who - count employers + 1
+    set size 0.1
+    set ent-auditor who - count employers + 1   ; Assign one auditor per state
   ]
 
-  ask  auditors [
-    move-to one-of patches with [not any? auditors-here and region = [ent-auditor] of myself]
+  if ( Abbrev-states )[
+    ask  auditors [
+      ; Auditors move to their assigned state
+      let my-state  patches with [region = [ent-auditor] of myself]
+      let x-position 11 + min [pxcor] of my-state
+      let y-position -2 + max [pycor] of my-state
+      setxy x-position y-position
+      set label entidad ent-auditor
+      set label-color black
+    ]
   ]
 end
 
@@ -302,7 +312,6 @@ to declaration
   ask employers with [mh_col = 0][
     set payroll* 0                                    ; declared payroll
     set undeclared-payroll payroll - payroll*            ; utility due evasion
-    ;set utility-total utility + undeclared-payroll       ; utility due production + utility due evasion
   ]
 
   ; Formal employers declares payroll*, where 0 < payroll* <= 1
@@ -581,6 +590,44 @@ end
 to-report ETE
   report 1 - ( sum [payroll*] of employers / sum [payroll] of employers )
 end
+
+; Abreviaturas en código ISO 3166-2
+to-report entidad [reg]
+  (ifelse
+    reg =  1 [report "AG"]
+    reg =  2 [report "BC"]
+    reg =  3 [report "BS"]
+    reg =  4 [report "CM"]
+    reg =  5 [report "CO"]
+    reg =  6 [report "CL"]
+    reg =  7 [report "CS"]
+    reg =  8 [report "CH"]
+    reg =  9 [report "CX"]
+    reg = 10 [report "DG"]
+    reg = 11 [report "GT"]
+    reg = 12 [report "GR"]
+    reg = 13 [report "HG"]
+    reg = 14 [report "JC"]
+    reg = 15 [report "EM"]
+    reg = 16 [report "MI"]
+    reg = 17 [report "MO"]
+    reg = 18 [report "NA"]
+    reg = 19 [report "NL"]
+    reg = 20 [report "OA"]
+    reg = 21 [report "PU"]
+    reg = 22 [report "QT"]
+    reg = 23 [report "QR"]
+    reg = 24 [report "SL"]
+    reg = 25 [report "SI"]
+    reg = 26 [report "SO"]
+    reg = 27 [report "TB"]
+    reg = 28 [report "TM"]
+    reg = 29 [report "TL"]
+    reg = 30 [report "VE"]
+    reg = 31 [report "YU"]
+    reg = 32 [report "ZA"]
+  )
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 258
@@ -591,7 +638,7 @@ GRAPHICS-WINDOW
 -1
 4.0
 1
-10
+9
 1
 1
 1
@@ -703,7 +750,6 @@ false
 "set-plot-x-range 0 round max [payroll] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [payroll] of employers"
-"pen-1" 1.0 1 -2674135 true "set-plot-x-range 0 round max [payroll] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" "histogram [payroll*] of employers"
 
 PLOT
 763
@@ -1055,6 +1101,17 @@ color-palette
 color-palette
 "viridis" "inferno" "magma" "plasma" "cividis" "parula"
 3
+
+SWITCH
+479
+427
+614
+460
+Abbrev-states
+Abbrev-states
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
