@@ -9,6 +9,10 @@ breed[auditors auditor]       ; auditors in the simulation
 ; Variable definitions
 globals [
   mx-states
+  ; to test wich equation is used
+  e94
+  e95
+  e96
 ]
 
 employers-own [
@@ -39,16 +43,16 @@ employers-own [
   production            ; value produced in period
   payroll               ; payroll
   payroll*              ; declared payroll
-  utility               ; utility due production
-  utility-evasion       ; utility due evasion
-  utility-total         ; utility due production + utility due evasion
+  undeclared-payroll    ; Unreported payroll
+  declared-tax          ; tax * declared payroll
+  undeclared-tax        ; tax * undeclared-payroll
+
   prob-formal           ; Probability of being formal employer
   risk-aversion-ρ       ; Risk aversion
+  audit?                ; Employer elegible to audit
   audited?              ; Employer was audited?
-  s-α                   ; Subjective audit probability
-  δ                     ; updating parameter for s-α
-  ATPNI                 ; After Tax and Penalties Net Income
-  utility-U             ; [0,1] optimized Utility
+  α-s                   ; Subjective audit probability
+  δ                     ; updating parameter for α-s
 ]
 
 auditors-own [
@@ -138,40 +142,6 @@ to setup-map
 
   ask patches with [region > 0 or region < 0 or region = 0][
     set pcolor green
-  ]
-
-  ; legend colors
-  ask patches with [pxcor > 40 and pxcor < 44 and pycor > 24 and pycor < 44][
-    (ifelse
-      color-palette = "viridis" [
-        set pcolor palette:scale-gradient [[253 231 37] [33 145 140] [68 1 84] ] pycor 24 44
-      ]
-      color-palette = "inferno" [
-        set pcolor palette:scale-gradient [[252 255 164] [188 55 84] [0 0 4]] pycor 24 44
-      ]
-      color-palette = "magma" [
-        set pcolor palette:scale-gradient [[252 253 191] [183 55 121] [0 0 4]] pycor 24 44
-      ]
-      color-palette = "plasma" [
-        set pcolor palette:scale-gradient [[240 249 33] [204 71 120] [13 8 135]] pycor 24 44
-      ]
-      color-palette = "cividis" [
-        set pcolor palette:scale-gradient [[255 234 70] [124 123 120] [0 32 77]] pycor 24 44
-      ]
-      color-palette = "parula" [
-        set pcolor palette:scale-gradient [[249 251 14] [51 183 160] [53 42 135]] pycor 24 44
-      ]
-    )
-  ]
-  ; legend text
-  ask patches with [pxcor = 49 and pycor = 43][
-    set plabel "High"
-    set plabel-color 1
-  ]
-
-  ask patches with [pxcor = 49 and pycor = 25][
-    set plabel "Low"
-    set plabel-color 1
   ]
 
 end
@@ -264,21 +234,18 @@ to initialize-variables
     ; Participacion of salaries in PIB are around %30 and %40
     set payroll floor production * 0.30
     set payroll* payroll ; At the beggining no employers evade
-    set utility production - payroll
-    set utility-evasion payroll - payroll*
-    set utility-total utility + utility-evasion
+    set declared-tax (tax / 100) * payroll*
+    set undeclared-payroll 0
+    set undeclared-tax 0
     set prob-formal random-float 1    ; At the beggining is random
-    set s-α α ; Typically we assume p = ps
+    set α-s α ; Typically we assume p = ps
     set δ -0.1
     set risk-aversion-ρ social-norm eda
+    set audit? false
     set audited? false
 
-    ;Updated after tax-audit
-    ;ATPNI
-    ;utility-U
-
-    ; Get propeeties from state (patch)
-    set tax [tax-ent] of patch-here + Δθ
+    ; Get properties from state (patch)
+    set tax max (list 0 ( [tax-ent] of patch-here + Δθ))
     set Corrupción [Corrupción-ent] of patch-here + ( ΔPC / 100 )
     set Inseguridad [Inseguridad-ent] of patch-here + ( ΔPI / 100 )
 
@@ -293,15 +260,14 @@ to initialize-variables
 end
 
 ;-----------------------------------------------------------------------
-; Go procedure
+; GO
 
 to go
   ; A tick will represent a month
   if (ticks >= 120 ) [stop]
   ; Process overview and scheduling
   choose-market
-  ;employers-produce
-  calculate-utility
+  declaration
   tax-collection
   tax-audit
   age-increase
@@ -311,6 +277,9 @@ to go
   tick
 end
 
+;;;; CHOOSE-MARKET
+; In this process employers, based on their attributes and sensed environment, decide to be in formal or informal sector
+; The global variable τ (tau) will be changed in order to change de decisión threshold of employer
 to choose-market
   if (ticks > 0 and ticks mod 12 = 0)[
     ask employers [
@@ -319,93 +288,152 @@ to choose-market
       let probability r:get "predict$predictions"
       set prob-formal probability
       set mh_col ifelse-value (probability > τ ) [1] [0]
-      ;set mh_col r:get "predict$predictions"
     ]
   ]
 end
 
+
+;;;; DECLARATION
+; In this process, employers decide the amount of wages to declare to the tax authority.
+; For details about equations see Hokamp and Cuervo Díaz, 2018.
+; DOI: https://doi.org/10.1002/9781119155713.ch9
+to declaration
+  ; Informal employers do not declare taxes, i.e. payroll* = 0
+  ask employers with [mh_col = 0][
+    set payroll* 0                                    ; declared payroll
+    set undeclared-payroll payroll - payroll*            ; utility due evasion
+    ;set utility-total utility + undeclared-payroll       ; utility due production + utility due evasion
+  ]
+
+  ; Formal employers declares payroll*, where 0 < payroll* <= 1
+  ask employers with [mh_col = 1][
+    let β 1 - Inseguridad                             ; Public goods efficiency
+    let θ tax / 100
+    let ρ risk-aversion-ρ
+    let I payroll
+    let BA 0
+
+    let aux.eqn1 (1 - β * (1 - ε-ap))
+    let aux.eqn2 (1 - β * (1 - ε-tc))
+
+    let eqn9.4 1 / ((1 + (((aux.eqn1 * π )  / ( aux.eqn2 * θ ) ) - 1 )) * (exp (ρ * aux.eqn1 * (π * I +  BA))))
+    let eqn9.5 1 / ((1 + (((aux.eqn1 * π )  / ( aux.eqn2 * θ ) ) - 1 )) * (exp (ρ * aux.eqn1 * (BA))))
+
+    (ifelse
+      α-s < eqn9.4 [
+        set payroll* 0 ; employer fully evades
+        set declared-tax 0
+        set undeclared-payroll payroll
+        set undeclared-tax θ * undeclared-payroll
+        set e94 e94 + 1
+      ]
+      α-s > eqn9.5 [
+        set payroll* payroll ; employer becomes fully tax compliant
+        set declared-tax θ * payroll*
+        set undeclared-payroll 0
+        set undeclared-tax 0
+        set e95 e95 + 1
+      ]
+      ; employer voluntarily declares:
+      [
+        let eqn9.6 I + (BA / π) - ((ln ( ((1 - α-s) * aux.eqn2 * θ) / (α-s * ((aux.eqn1) * π - (aux.eqn2) * θ)))) / (ρ * π * aux.eqn1))
+        set payroll* eqn9.6
+        set declared-tax θ * payroll*
+        set undeclared-payroll payroll - payroll*
+        set undeclared-tax θ * undeclared-payroll
+        set e96 e96 + 1
+      ]
+    )
+  ]
+end
+
+
+;;;; TAX-COLLECTION
+; The tax authority collects payroll taxes that employers voluntarily declared
 to tax-collection
   ask auditors [
-    set tax-collected sum [payroll*] of my-employers
+    set tax-collected sum [declared-tax] of my-employers
   ]
 end
 
+
+;;;; TAX-AUDIT
+; The tax authority carries out a series of random audits with a certain level of effectiveness.
+; Detected evaders must pay a penalty rate (which must be higher than the tax) on undeclared wages.
 to tax-audit
+  ; Randomly choose employers to audit
   ask auditors [
-    ;move-to one-of neighbors with [region = [ent-auditor] of myself]
-    let my-audited-employer one-of my-employers
-    ; IF:
-    ;    any employer found
-    ;    AND employer evaded an amount
-    ;    AND audit process is succesfull
-    if (;any? my-audited-employer and item 0
-      ([utility-evasion] of my-audited-employer) > 0 and ε-ap > random-float 1)[
-      ; Just one period and one employer collected
-      set penalty-collected (1 + π) * [utility-evasion] of my-audited-employer
+    ask my-employers with [mh_col = 1][
+      if (random-float 1 < α)[
+        set audit? true
+        set α-s 1 +  abs δ          ; Change subjective audit probability
+      ]
+    ]
+  ]
+
+  ask auditors [
+    let employers-to-audit my-employers with [audit? and undeclared-payroll > 0]
+    if (any? employers-to-audit)[
+      ; Finalize audit for fully tax compliant employers
+      ask employers-to-audit with [undeclared-payroll <= 0][
+        set audit? false
+        set audited? true
+        set α-s 1 +  abs δ          ; Change subjective audit probability
+      ]
     ]
 
-    ask my-audited-employer [
-      set audited? true
-      set s-α 1
-      set utility-evasion 0
-      set utility utility - ( π * payroll* )
+    set employers-to-audit my-employers with [audit?]
+    if (any? employers-to-audit)[
+      ; If the audit is unsuccessful with probability ε-ap,
+      ; the audit ends for the employer, even if it is evader
+      ask employers-to-audit with [audit?][
+        if (random-float 1 > ε-ap)[
+          set audit? false
+          set audited? true
+          set α-s 1 +  abs δ          ; Change subjective audit probability
+        ]
+      ]
     ]
 
+    set employers-to-audit my-employers with [audit?]
+    if (any? employers-to-audit)[
+      ; The remaining audits are successful
+      ; And penalties are applied
+      set penalty-collected (1 + π) * sum [undeclared-tax] of employers-to-audit
+      ; the audit ends for the employer
+      ask employers-to-audit [
+        set payroll* payroll
+        set declared-tax (tax / 100) * payroll*
+        set undeclared-payroll 0                  ; The undeclared amount becomes zero
+        set undeclared-tax 0
+        set audit? false
+        set audited? true
+      ]
+    ]
   ]
 end
 
-to calculate-utility
-
-  ask employers with [audited?][
-    let T sum [tax-collected] of auditors with [ent-auditor = [ent] of myself]
-    let P sum [penalty-collected] of auditors with [ent-auditor = [ent] of myself]
-    let PG T + P
-    let I payroll
-    let θ tax
-    let X prob-formal * I
-    let β 1 - Inseguridad
-    let PG-i PG - (θ * X) - π * (I - X)
-    let net-income I - (θ * X) + β * ((θ * X ) * (1 - ε-tc) + PG-i)
-
-    set ATPNI ATPNI - (1 - β * (1 - ε-ap)) * ( π * (I - X))
-    set payroll* X
-    set utility production - payroll
-    set utility-evasion payroll - payroll*
-    set utility-total utility + utility-evasion
-    set utility-U 1 - exp (- risk-aversion-ρ * ATPNI)
-  ]
-
-  ask employers with [not audited?][
-    let T sum [tax-collected] of auditors with [ent-auditor = [ent] of myself]
-    let P sum [penalty-collected] of auditors with [ent-auditor = [ent] of myself]
-    let PG T + P
-    let I payroll
-    let θ tax
-    let X prob-formal * I
-    let β 1 - Inseguridad
-    let PG-i PG - (θ * X) - π * (I - X)
-
-    set ATPNI I - (θ * X) + β * ((θ * X ) * (1 - ε-tc) + PG-i)
-    set payroll* X
-    set utility production - payroll
-    set utility-evasion payroll - payroll*
-    set utility-total utility + utility-evasion
-    set utility-U 1 - exp (- risk-aversion-ρ * ATPNI)
-  ]
-
-end
-
+;;;; ADJUST-SUBJECIVE
+; Update subjective audit probability
+; each period decrease in δ amount
 to adjust-subjetive
-  ask employers with [s-α > α][
-    set s-α s-α + δ
+  ask employers with [α-s > α][
+    set α-s α-s + δ
   ]
 
-  ask employers with [s-α < α][
-    set s-α α
+  ask employers with [α-s < α][
+    set α-s α
     set audited? false
   ]
 end
 
+;;;; AGE-INCREASE
+; Every 12 months employers increase their age by 1 year.
+; In each period, employers have a probability of dying,
+; which follows a Weibull distribution function adjusted for the case of Mexico,
+; where life expectancy at birth is 75 years.
+; It is assumed that when an employer dies, someone else takes their place with
+; the same characteristics, except for age, which is generated randomly.
 to age-increase
   ; Increase age of employers each 12 months
   if (ticks > 0 and ticks mod 12 = 0)[
@@ -432,9 +460,39 @@ to age-increase
   ]
 end
 
+;;;; PAINT-PATCHES
+; For visualization purposes, this procedure colors the polygons according to the tax collection.
 to paint-patches
   let max-collection max [tax-collected + penalty-collected] of auditors
   let min-collection min [tax-collected + penalty-collected] of auditors
+
+  ; legend colors
+  if (ticks = 1)[
+    ask patches with [pxcor > 40 and pxcor < 44 and pycor > 24 and pycor < 44][
+      (ifelse
+        color-palette = "viridis" [
+          set pcolor palette:scale-gradient [[253 231 37] [33 145 140] [68 1 84] ] pycor 24 44
+        ]
+        color-palette = "inferno" [
+          set pcolor palette:scale-gradient [[252 255 164] [188 55 84] [0 0 4]] pycor 24 44
+        ]
+        color-palette = "magma" [
+          set pcolor palette:scale-gradient [[252 253 191] [183 55 121] [0 0 4]] pycor 24 44
+        ]
+        color-palette = "plasma" [
+          set pcolor palette:scale-gradient [[240 249 33] [204 71 120] [13 8 135]] pycor 24 44
+        ]
+        color-palette = "cividis" [
+          set pcolor palette:scale-gradient [[255 234 70] [124 123 120] [0 32 77]] pycor 24 44
+        ]
+        color-palette = "parula" [
+          set pcolor palette:scale-gradient [[249 251 14] [51 183 160] [53 42 135]] pycor 24 44
+        ]
+      )
+    ]
+  ]
+
+  ; paint polygons
   ask patches with [region > 0 or region < 0 or region = 0][
     let taxes sum [tax-collected] of auditors with [ent-auditor = [region] of myself]
     let penalties sum [penalty-collected] of auditors with [ent-auditor = [region] of myself]
@@ -465,12 +523,18 @@ to paint-patches
 
   ; legend text
   ask patches with [pxcor = 49 and pycor = 43][
-    set plabel floor max-collection
+    set plabel precision max-collection 2
     set plabel-color 1
   ]
 
   ask patches with [pxcor = 49 and pycor = 25][
-    set plabel floor min-collection
+    set plabel precision min-collection 2
+    set plabel-color 1
+  ]
+
+  ; name of legend
+  ask patches with [pxcor = 51 and pycor = 46][
+    set plabel "Tax collection ($)"
     set plabel-color 1
   ]
 
@@ -478,7 +542,8 @@ end
 
 
 ;-----------------------------------------------------------------------
-; reporters
+; REPORTERS
+; TODO: Add reporters for plots and outputs
 
 to-report gibrat [ mn std ]
   let s2 std ^ 2
@@ -488,11 +553,13 @@ to-report gibrat [ mn std ]
   report first-term * second-term
 end
 
+; Reporter to produce Pareto distribution
 to-report pareto [ mn std alp ]
   let x random-normal mn std
   report ( 1 / (x ^ (1 + alp)))
 end
 
+; Reporter to adapt risk aversion ρ
 to-report social-norm [age]
   (ifelse
     age <= 34 [
@@ -508,6 +575,11 @@ to-report social-norm [age]
     [
       report 0.75 + random-float 0.25
   ])
+end
+
+; Reporter for Extent of Tax Evasion
+to-report ETE
+  report 1 - ( sum [payroll*] of employers / sum [payroll] of employers )
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -605,10 +677,10 @@ GDP of informal economy (%)
 11
 
 CHOOSER
-8
-49
-211
-94
+9
+46
+178
+91
 scale-for-number-of-employers
 scale-for-number-of-employers
 "1:2,000" "1:3,000" "1:4,000" "1:5,000" "test"
@@ -631,6 +703,7 @@ false
 "set-plot-x-range 0 round max [payroll] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [payroll] of employers"
+"pen-1" 1.0 1 -2674135 true "set-plot-x-range 0 round max [payroll] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" "histogram [payroll*] of employers"
 
 PLOT
 763
@@ -652,9 +725,9 @@ PENS
 
 SLIDER
 14
-420
+413
 127
-453
+446
 τ
 τ
 0
@@ -678,14 +751,14 @@ MONITOR
 
 SLIDER
 8
-120
+113
 128
-153
+146
 π
 π
 0.1
 1
-0.5
+0.3
 0.01
 1
 NIL
@@ -693,14 +766,14 @@ HORIZONTAL
 
 SLIDER
 8
-157
+150
 128
-190
+183
 α
 α
 0
 1
-0.1
+0.05
 0.01
 1
 NIL
@@ -711,7 +784,7 @@ PLOT
 13
 1234
 133
-Probability X
+Probability of become formal
 NIL
 NIL
 0.0
@@ -726,9 +799,9 @@ PENS
 
 SLIDER
 11
-215
+208
 126
-248
+241
 ε-ap
 ε-ap
 0
@@ -741,9 +814,9 @@ HORIZONTAL
 
 TEXTBOX
 11
-198
+191
 161
-216
+209
 Effectiveness of
 11
 0.0
@@ -751,9 +824,9 @@ Effectiveness of
 
 TEXTBOX
 136
-225
+218
 249
-243
+236
 Audit process
 11
 0.0
@@ -761,9 +834,9 @@ Audit process
 
 SLIDER
 11
-251
+244
 126
-284
+277
 ε-tc
 ε-tc
 0
@@ -776,31 +849,13 @@ HORIZONTAL
 
 TEXTBOX
 135
-261
+254
 250
-279
+272
 Tax collection
 11
 0.0
 1
-
-PLOT
-1000
-135
-1234
-255
-utility-U
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"set-plot-x-range 0 1.1\nset-plot-y-range 0 1\nset-histogram-num-bars sqrt count employers" "set-plot-y-range 0 1"
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [utility-U] of employers"
 
 PLOT
 1235
@@ -818,7 +873,7 @@ true
 false
 "set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot 1 - (sum [payroll*] of employers / sum [payroll] of employers)"
+"default" 1.0 0 -16777216 true "" "plot ETE"
 
 PLOT
 1235
@@ -834,15 +889,15 @@ NIL
 10.0
 true
 false
-"set-plot-x-range 0 120" ""
+"set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
 PENS
 "Penalties" 1.0 0 -955883 true "" "plot sum [penalty-collected] of auditors"
 
 PLOT
 1000
-257
+135
 1234
-377
+255
 Collected tax
 month
 NIL
@@ -858,9 +913,9 @@ PENS
 
 TEXTBOX
 11
-293
+286
 161
-311
+304
 decrease / increase 
 11
 0.0
@@ -868,12 +923,12 @@ decrease / increase
 
 SLIDER
 14
-312
+305
 127
-345
+338
 Δθ
 Δθ
--1
+-3
 3
 0.0
 0.5
@@ -883,9 +938,9 @@ HORIZONTAL
 
 SLIDER
 14
-348
+341
 127
-381
+374
 ΔPI
 ΔPI
 -15
@@ -898,9 +953,9 @@ HORIZONTAL
 
 TEXTBOX
 136
-322
+315
 249
-340
+333
 Tax rate
 11
 0.0
@@ -908,9 +963,9 @@ Tax rate
 
 TEXTBOX
 136
-358
+351
 248
-380
+373
 Perceived insecurity\n
 11
 0.0
@@ -918,9 +973,9 @@ Perceived insecurity\n
 
 TEXTBOX
 10
-103
+96
 160
-121
+114
 Fiscal environment
 11
 0.0
@@ -928,9 +983,9 @@ Fiscal environment
 
 TEXTBOX
 137
-130
+123
 249
-148
+141
 Penalty rate
 11
 0.0
@@ -938,9 +993,9 @@ Penalty rate
 
 TEXTBOX
 137
-167
+160
 249
-185
+178
 Audit probability
 11
 0.0
@@ -948,9 +1003,9 @@ Audit probability
 
 SLIDER
 14
-384
+377
 127
-417
+410
 ΔPC
 ΔPC
 -15
@@ -963,9 +1018,9 @@ HORIZONTAL
 
 TEXTBOX
 136
-394
+387
 250
-412
+405
 Perceived corruption
 11
 0.0
@@ -973,9 +1028,9 @@ Perceived corruption
 
 TEXTBOX
 136
-425
+418
 250
-453
+446
 Decision threshold\nto be in formal sector
 11
 0.0
@@ -986,20 +1041,20 @@ TEXTBOX
 432
 399
 460
-Visualization of tax collection
+Visualization \noptions
 11
 0.0
 1
 
 CHOOSER
-368
+338
 427
-506
+476
 472
 color-palette
 color-palette
 "viridis" "inferno" "magma" "plasma" "cividis" "parula"
-5
+3
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1367,6 +1422,21 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="40"/>
+    <metric>e94</metric>
+    <metric>e95</metric>
+    <metric>e96</metric>
+    <steppedValueSet variable="α" first="0.05" step="0.05" last="0.25"/>
+    <steppedValueSet variable="π" first="0.05" step="0.05" last="0.45"/>
+    <enumeratedValueSet variable="τ">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
