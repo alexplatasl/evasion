@@ -13,27 +13,28 @@ globals [
   e94
   e95
   e96
+  audits
 ]
 
 employers-own [
   ; from ENOE
-  t_loc	
-  ent	
-  sex	
-  eda	
-  n_hij	
-  e_con	
-  salario	
-  c_ocu11c	
-  ing7c	
-  dur9c	
-  ambito2	
-  anios_esc	
-  hrsocup	
-  ingocup	
-  tcco	
-  scian	
-  mh_col	
+  t_loc
+  ent
+  sex
+  eda
+  n_hij
+  e_con
+  salario
+  c_ocu11c
+  ing7c
+  dur9c
+  ambito2
+  anios_esc
+  hrsocup
+  ingocup
+  tcco
+  scian
+  mh_col
   year
   tax
   Corrupción
@@ -46,6 +47,7 @@ employers-own [
   undeclared-payroll    ; Unreported payroll
   declared-tax          ; tax * declared payroll
   undeclared-tax        ; tax * undeclared-payroll
+  type-of-taxpayer      ; 0 = fully evades; 1 = partial tax compliant; 2 = fully tax compliant
 
   prob-formal           ; Probability of being formal employer
   risk-aversion-ρ       ; Risk aversion
@@ -106,7 +108,8 @@ to setup-ML
   r:eval "library(readr)"
   ;rfmodel2 - regression
   ;rfmodel1 - classification
-  r:eval "rf <- readRDS('D:/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
+  ;r:eval "rf <- readRDS('D:/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
+  r:eval "rf <- readRDS('C:/Users/User/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
 end
 
 to setup-patches
@@ -247,6 +250,7 @@ to initialize-variables
     set declared-tax (tax / 100) * payroll*
     set undeclared-payroll 0
     set undeclared-tax 0
+    set type-of-taxpayer 2
     set prob-formal random-float 1    ; At the beggining is random
     set α-s α ; Typically we assume p = ps
     set δ -0.1
@@ -291,6 +295,7 @@ end
 ; In this process employers, based on their attributes and sensed environment, decide to be in formal or informal sector
 ; The global variable τ (tau) will be changed in order to change de decisión threshold of employer
 to choose-market
+  set audits 0
   if (ticks > 0 and ticks mod 12 = 0)[
     ask employers [
       (r:putagentdf "newdata" self "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
@@ -311,7 +316,9 @@ to declaration
   ; Informal employers do not declare taxes, i.e. payroll* = 0
   ask employers with [mh_col = 0][
     set payroll* 0                                    ; declared payroll
-    set undeclared-payroll payroll - payroll*            ; utility due evasion
+    set undeclared-payroll payroll - payroll*
+    set undeclared-tax (tax / 100) * undeclared-payroll
+    set type-of-taxpayer 0
   ]
 
   ; Formal employers declares payroll*, where 0 < payroll* <= 1
@@ -334,6 +341,7 @@ to declaration
         set declared-tax 0
         set undeclared-payroll payroll
         set undeclared-tax θ * undeclared-payroll
+        set type-of-taxpayer 0
         set e94 e94 + 1
       ]
       α-s > eqn9.5 [
@@ -341,15 +349,21 @@ to declaration
         set declared-tax θ * payroll*
         set undeclared-payroll 0
         set undeclared-tax 0
+        set type-of-taxpayer 2
         set e95 e95 + 1
       ]
       ; employer voluntarily declares:
       [
         let eqn9.6 I + (BA / π) - ((ln ( ((1 - α-s) * aux.eqn2 * θ) / (α-s * ((aux.eqn1) * π - (aux.eqn2) * θ)))) / (ρ * π * aux.eqn1))
+        if (eqn9.6 < 0)[
+          set payroll* max (list 0 eqn9.6)
+          set type-of-taxpayer 0
+        ]
         set payroll* eqn9.6
         set declared-tax θ * payroll*
         set undeclared-payroll payroll - payroll*
         set undeclared-tax θ * undeclared-payroll
+        set type-of-taxpayer 1
         set e96 e96 + 1
       ]
     )
@@ -376,6 +390,7 @@ to tax-audit
       if (random-float 1 < α)[
         set audit? true
         set α-s 1 +  abs δ          ; Change subjective audit probability
+        set audits audits + 1
       ]
     ]
   ]
@@ -587,8 +602,281 @@ to-report social-norm [age]
 end
 
 ; Reporter for Extent of Tax Evasion
-to-report ETE
-  report 1 - ( sum [payroll*] of employers / sum [payroll] of employers )
+to-report ETE  report 1 - ( sum [payroll*] of employers / sum [payroll] of employers ) end
+
+; Reporter for Extent of Tax Evasion of formal sector
+to-report ETE-formal
+  report 1 - ( sum [payroll*] of employers with [mh_col = 1] / sum [payroll] of employers with [mh_col = 1])
+end
+
+; ETE by state
+to-report ETE01 report 1 - ( sum [payroll*] of employers with [region = 1] / sum [payroll] of employers with [region = 1]) end
+to-report ETE02 report 1 - ( sum [payroll*] of employers with [region = 2] / sum [payroll] of employers with [region = 2]) end
+to-report ETE03 report 1 - ( sum [payroll*] of employers with [region = 3] / sum [payroll] of employers with [region = 3]) end
+to-report ETE04 report 1 - ( sum [payroll*] of employers with [region = 4] / sum [payroll] of employers with [region = 4]) end
+to-report ETE05 report 1 - ( sum [payroll*] of employers with [region = 5] / sum [payroll] of employers with [region = 5]) end
+to-report ETE06 report 1 - ( sum [payroll*] of employers with [region = 6] / sum [payroll] of employers with [region = 6]) end
+to-report ETE07 report 1 - ( sum [payroll*] of employers with [region = 7] / sum [payroll] of employers with [region = 7]) end
+to-report ETE08 report 1 - ( sum [payroll*] of employers with [region = 8] / sum [payroll] of employers with [region = 8]) end
+to-report ETE09 report 1 - ( sum [payroll*] of employers with [region = 9] / sum [payroll] of employers with [region = 9]) end
+to-report ETE10 report 1 - ( sum [payroll*] of employers with [region = 10] / sum [payroll] of employers with [region = 10]) end
+to-report ETE11 report 1 - ( sum [payroll*] of employers with [region = 11] / sum [payroll] of employers with [region = 11]) end
+to-report ETE12 report 1 - ( sum [payroll*] of employers with [region = 12] / sum [payroll] of employers with [region = 12]) end
+to-report ETE13 report 1 - ( sum [payroll*] of employers with [region = 13] / sum [payroll] of employers with [region = 13]) end
+to-report ETE14 report 1 - ( sum [payroll*] of employers with [region = 14] / sum [payroll] of employers with [region = 14]) end
+to-report ETE15 report 1 - ( sum [payroll*] of employers with [region = 15] / sum [payroll] of employers with [region = 15]) end
+to-report ETE16 report 1 - ( sum [payroll*] of employers with [region = 16] / sum [payroll] of employers with [region = 16]) end
+to-report ETE17 report 1 - ( sum [payroll*] of employers with [region = 17] / sum [payroll] of employers with [region = 17]) end
+to-report ETE18 report 1 - ( sum [payroll*] of employers with [region = 18] / sum [payroll] of employers with [region = 18]) end
+to-report ETE19 report 1 - ( sum [payroll*] of employers with [region = 19] / sum [payroll] of employers with [region = 19]) end
+to-report ETE20 report 1 - ( sum [payroll*] of employers with [region = 20] / sum [payroll] of employers with [region = 20]) end
+to-report ETE21 report 1 - ( sum [payroll*] of employers with [region = 21] / sum [payroll] of employers with [region = 21]) end
+to-report ETE22 report 1 - ( sum [payroll*] of employers with [region = 22] / sum [payroll] of employers with [region = 22]) end
+to-report ETE23 report 1 - ( sum [payroll*] of employers with [region = 23] / sum [payroll] of employers with [region = 23]) end
+to-report ETE24 report 1 - ( sum [payroll*] of employers with [region = 24] / sum [payroll] of employers with [region = 24]) end
+to-report ETE25 report 1 - ( sum [payroll*] of employers with [region = 25] / sum [payroll] of employers with [region = 25]) end
+to-report ETE26 report 1 - ( sum [payroll*] of employers with [region = 26] / sum [payroll] of employers with [region = 26]) end
+to-report ETE27 report 1 - ( sum [payroll*] of employers with [region = 27] / sum [payroll] of employers with [region = 27]) end
+to-report ETE28 report 1 - ( sum [payroll*] of employers with [region = 28] / sum [payroll] of employers with [region = 28]) end
+to-report ETE29 report 1 - ( sum [payroll*] of employers with [region = 29] / sum [payroll] of employers with [region = 29]) end
+to-report ETE30 report 1 - ( sum [payroll*] of employers with [region = 30] / sum [payroll] of employers with [region = 30]) end
+to-report ETE31 report 1 - ( sum [payroll*] of employers with [region = 31] / sum [payroll] of employers with [region = 31]) end
+to-report ETE32 report 1 - ( sum [payroll*] of employers with [region = 32] / sum [payroll] of employers with [region = 32]) end
+
+
+;
+to-report evasion
+  report sum [undeclared-tax] of employers
+end
+
+; report evasion by state
+to-report  undeclared01 report sum [undeclared-tax] of employers with [region =  1] end
+to-report  undeclared02 report sum [undeclared-tax] of employers with [region =  2] end
+to-report  undeclared03 report sum [undeclared-tax] of employers with [region =  3] end
+to-report  undeclared04 report sum [undeclared-tax] of employers with [region =  4] end
+to-report  undeclared05 report sum [undeclared-tax] of employers with [region =  5] end
+to-report  undeclared06 report sum [undeclared-tax] of employers with [region =  6] end
+to-report  undeclared07 report sum [undeclared-tax] of employers with [region =  7] end
+to-report  undeclared08 report sum [undeclared-tax] of employers with [region =  8] end
+to-report  undeclared09 report sum [undeclared-tax] of employers with [region =  9] end
+to-report  undeclared10 report sum [undeclared-tax] of employers with [region =  10] end
+to-report  undeclared11 report sum [undeclared-tax] of employers with [region =  11] end
+to-report  undeclared12 report sum [undeclared-tax] of employers with [region =  12] end
+to-report  undeclared13 report sum [undeclared-tax] of employers with [region =  13] end
+to-report  undeclared14 report sum [undeclared-tax] of employers with [region =  14] end
+to-report  undeclared15 report sum [undeclared-tax] of employers with [region =  15] end
+to-report  undeclared16 report sum [undeclared-tax] of employers with [region =  16] end
+to-report  undeclared17 report sum [undeclared-tax] of employers with [region =  17] end
+to-report  undeclared18 report sum [undeclared-tax] of employers with [region =  18] end
+to-report  undeclared19 report sum [undeclared-tax] of employers with [region =  19] end
+to-report  undeclared20 report sum [undeclared-tax] of employers with [region =  20] end
+to-report  undeclared21 report sum [undeclared-tax] of employers with [region =  21] end
+to-report  undeclared22 report sum [undeclared-tax] of employers with [region =  22] end
+to-report  undeclared23 report sum [undeclared-tax] of employers with [region =  23] end
+to-report  undeclared24 report sum [undeclared-tax] of employers with [region =  24] end
+to-report  undeclared25 report sum [undeclared-tax] of employers with [region =  25] end
+to-report  undeclared26 report sum [undeclared-tax] of employers with [region =  26] end
+to-report  undeclared27 report sum [undeclared-tax] of employers with [region =  27] end
+to-report  undeclared28 report sum [undeclared-tax] of employers with [region =  28] end
+to-report  undeclared29 report sum [undeclared-tax] of employers with [region =  29] end
+to-report  undeclared30 report sum [undeclared-tax] of employers with [region =  30] end
+to-report  undeclared31 report sum [undeclared-tax] of employers with [region =  31] end
+to-report  undeclared32 report sum [undeclared-tax] of employers with [region =  32] end
+
+
+;
+to-report evasion-formal
+  report sum [undeclared-tax] of employers with [mh_col = 1]
+end
+
+; Report types of taxpayer
+to-report full-evasor
+  report count employers with [type-of-taxpayer = 0] / count employers
+end
+
+to-report partial-compliant
+  report count employers with [type-of-taxpayer = 1] / count employers
+end
+
+to-report compliant
+  report count employers with [type-of-taxpayer = 2] / count employers
+end
+; ratio of compliants by state
+to-report compliant01 report count employers with [type-of-taxpayer = 2 and region = 1] / count employers with [region = 1] end
+to-report compliant02 report count employers with [type-of-taxpayer = 2 and region = 2] / count employers with [region = 2] end
+to-report compliant03 report count employers with [type-of-taxpayer = 2 and region = 3] / count employers with [region = 3] end
+to-report compliant04 report count employers with [type-of-taxpayer = 2 and region = 4] / count employers with [region = 4] end
+to-report compliant05 report count employers with [type-of-taxpayer = 2 and region = 5] / count employers with [region = 5] end
+to-report compliant06 report count employers with [type-of-taxpayer = 2 and region = 6] / count employers with [region = 6] end
+to-report compliant07 report count employers with [type-of-taxpayer = 2 and region = 7] / count employers with [region = 7] end
+to-report compliant08 report count employers with [type-of-taxpayer = 2 and region = 8] / count employers with [region = 8] end
+to-report compliant09 report count employers with [type-of-taxpayer = 2 and region = 9] / count employers with [region = 9] end
+to-report compliant10 report count employers with [type-of-taxpayer = 2 and region = 10] / count employers with [region = 10] end
+to-report compliant11 report count employers with [type-of-taxpayer = 2 and region = 11] / count employers with [region = 11] end
+to-report compliant12 report count employers with [type-of-taxpayer = 2 and region = 12] / count employers with [region = 12] end
+to-report compliant13 report count employers with [type-of-taxpayer = 2 and region = 13] / count employers with [region = 13] end
+to-report compliant14 report count employers with [type-of-taxpayer = 2 and region = 14] / count employers with [region = 14] end
+to-report compliant15 report count employers with [type-of-taxpayer = 2 and region = 15] / count employers with [region = 15] end
+to-report compliant16 report count employers with [type-of-taxpayer = 2 and region = 16] / count employers with [region = 16] end
+to-report compliant17 report count employers with [type-of-taxpayer = 2 and region = 17] / count employers with [region = 17] end
+to-report compliant18 report count employers with [type-of-taxpayer = 2 and region = 18] / count employers with [region = 18] end
+to-report compliant19 report count employers with [type-of-taxpayer = 2 and region = 19] / count employers with [region = 19] end
+to-report compliant20 report count employers with [type-of-taxpayer = 2 and region = 20] / count employers with [region = 20] end
+to-report compliant21 report count employers with [type-of-taxpayer = 2 and region = 21] / count employers with [region = 21] end
+to-report compliant22 report count employers with [type-of-taxpayer = 2 and region = 22] / count employers with [region = 22] end
+to-report compliant23 report count employers with [type-of-taxpayer = 2 and region = 23] / count employers with [region = 23] end
+to-report compliant24 report count employers with [type-of-taxpayer = 2 and region = 24] / count employers with [region = 24] end
+to-report compliant25 report count employers with [type-of-taxpayer = 2 and region = 25] / count employers with [region = 25] end
+to-report compliant26 report count employers with [type-of-taxpayer = 2 and region = 26] / count employers with [region = 26] end
+to-report compliant27 report count employers with [type-of-taxpayer = 2 and region = 27] / count employers with [region = 27] end
+to-report compliant28 report count employers with [type-of-taxpayer = 2 and region = 28] / count employers with [region = 28] end
+to-report compliant29 report count employers with [type-of-taxpayer = 2 and region = 29] / count employers with [region = 29] end
+to-report compliant30 report count employers with [type-of-taxpayer = 2 and region = 30] / count employers with [region = 30] end
+to-report compliant31 report count employers with [type-of-taxpayer = 2 and region = 31] / count employers with [region = 31] end
+to-report compliant32 report count employers with [type-of-taxpayer = 2 and region = 32] / count employers with [region = 32] end
+
+
+
+to-report taxes-collected
+  report sum [tax-collected] of auditors
+end
+
+; Taxes collected by state
+to-report  taxes01 report sum [tax-collected] of auditors with [ent-auditor = 1] end
+to-report  taxes02 report sum [tax-collected] of auditors with [ent-auditor = 2] end
+to-report  taxes03 report sum [tax-collected] of auditors with [ent-auditor = 3] end
+to-report  taxes04 report sum [tax-collected] of auditors with [ent-auditor = 4] end
+to-report  taxes05 report sum [tax-collected] of auditors with [ent-auditor = 5] end
+to-report  taxes06 report sum [tax-collected] of auditors with [ent-auditor = 6] end
+to-report  taxes07 report sum [tax-collected] of auditors with [ent-auditor = 7] end
+to-report  taxes08 report sum [tax-collected] of auditors with [ent-auditor = 8] end
+to-report  taxes09 report sum [tax-collected] of auditors with [ent-auditor = 9] end
+to-report  taxes10 report sum [tax-collected] of auditors with [ent-auditor = 10] end
+to-report  taxes11 report sum [tax-collected] of auditors with [ent-auditor = 11] end
+to-report  taxes12 report sum [tax-collected] of auditors with [ent-auditor = 12] end
+to-report  taxes13 report sum [tax-collected] of auditors with [ent-auditor = 13] end
+to-report  taxes14 report sum [tax-collected] of auditors with [ent-auditor = 14] end
+to-report  taxes15 report sum [tax-collected] of auditors with [ent-auditor = 15] end
+to-report  taxes16 report sum [tax-collected] of auditors with [ent-auditor = 16] end
+to-report  taxes17 report sum [tax-collected] of auditors with [ent-auditor = 17] end
+to-report  taxes18 report sum [tax-collected] of auditors with [ent-auditor = 18] end
+to-report  taxes19 report sum [tax-collected] of auditors with [ent-auditor = 19] end
+to-report  taxes20 report sum [tax-collected] of auditors with [ent-auditor = 20] end
+to-report  taxes21 report sum [tax-collected] of auditors with [ent-auditor = 21] end
+to-report  taxes22 report sum [tax-collected] of auditors with [ent-auditor = 22] end
+to-report  taxes23 report sum [tax-collected] of auditors with [ent-auditor = 23] end
+to-report  taxes24 report sum [tax-collected] of auditors with [ent-auditor = 24] end
+to-report  taxes25 report sum [tax-collected] of auditors with [ent-auditor = 25] end
+to-report  taxes26 report sum [tax-collected] of auditors with [ent-auditor = 26] end
+to-report  taxes27 report sum [tax-collected] of auditors with [ent-auditor = 27] end
+to-report  taxes28 report sum [tax-collected] of auditors with [ent-auditor = 28] end
+to-report  taxes29 report sum [tax-collected] of auditors with [ent-auditor = 29] end
+to-report  taxes30 report sum [tax-collected] of auditors with [ent-auditor = 30] end
+to-report  taxes31 report sum [tax-collected] of auditors with [ent-auditor = 31] end
+to-report  taxes32 report sum [tax-collected] of auditors with [ent-auditor = 32] end
+
+
+to-report penalties-collected
+  report sum [penalty-collected] of auditors
+end
+
+; Penalties by state
+to-report  penalties01 report sum [penalty-collected] of auditors with [ent-auditor = 1] end
+to-report  penalties02 report sum [penalty-collected] of auditors with [ent-auditor = 2] end
+to-report  penalties03 report sum [penalty-collected] of auditors with [ent-auditor = 3] end
+to-report  penalties04 report sum [penalty-collected] of auditors with [ent-auditor = 4] end
+to-report  penalties05 report sum [penalty-collected] of auditors with [ent-auditor = 5] end
+to-report  penalties06 report sum [penalty-collected] of auditors with [ent-auditor = 6] end
+to-report  penalties07 report sum [penalty-collected] of auditors with [ent-auditor = 7] end
+to-report  penalties08 report sum [penalty-collected] of auditors with [ent-auditor = 8] end
+to-report  penalties09 report sum [penalty-collected] of auditors with [ent-auditor = 9] end
+to-report  penalties10 report sum [penalty-collected] of auditors with [ent-auditor = 10] end
+to-report  penalties11 report sum [penalty-collected] of auditors with [ent-auditor = 11] end
+to-report  penalties12 report sum [penalty-collected] of auditors with [ent-auditor = 12] end
+to-report  penalties13 report sum [penalty-collected] of auditors with [ent-auditor = 13] end
+to-report  penalties14 report sum [penalty-collected] of auditors with [ent-auditor = 14] end
+to-report  penalties15 report sum [penalty-collected] of auditors with [ent-auditor = 15] end
+to-report  penalties16 report sum [penalty-collected] of auditors with [ent-auditor = 16] end
+to-report  penalties17 report sum [penalty-collected] of auditors with [ent-auditor = 17] end
+to-report  penalties18 report sum [penalty-collected] of auditors with [ent-auditor = 18] end
+to-report  penalties19 report sum [penalty-collected] of auditors with [ent-auditor = 19] end
+to-report  penalties20 report sum [penalty-collected] of auditors with [ent-auditor = 20] end
+to-report  penalties21 report sum [penalty-collected] of auditors with [ent-auditor = 21] end
+to-report  penalties22 report sum [penalty-collected] of auditors with [ent-auditor = 22] end
+to-report  penalties23 report sum [penalty-collected] of auditors with [ent-auditor = 23] end
+to-report  penalties24 report sum [penalty-collected] of auditors with [ent-auditor = 24] end
+to-report  penalties25 report sum [penalty-collected] of auditors with [ent-auditor = 25] end
+to-report  penalties26 report sum [penalty-collected] of auditors with [ent-auditor = 26] end
+to-report  penalties27 report sum [penalty-collected] of auditors with [ent-auditor = 27] end
+to-report  penalties28 report sum [penalty-collected] of auditors with [ent-auditor = 28] end
+to-report  penalties29 report sum [penalty-collected] of auditors with [ent-auditor = 29] end
+to-report  penalties30 report sum [penalty-collected] of auditors with [ent-auditor = 30] end
+to-report  penalties31 report sum [penalty-collected] of auditors with [ent-auditor = 31] end
+to-report  penalties32 report sum [penalty-collected] of auditors with [ent-auditor = 32] end
+
+
+to-report min-tax-collected
+  report precision min [tax-collected + penalty-collected] of auditors 3
+end
+
+to-report max-tax-collected
+  report precision max [tax-collected + penalty-collected] of auditors 3
+end
+
+to-report state-min-collected
+  let state min-one-of auditors [tax-collected]
+  report entidad [ent-auditor] of state
+end
+
+to-report state-max-collected
+  let state max-one-of auditors [tax-collected]
+  report entidad [ent-auditor] of state
+end
+
+to-report pct-informal-emp
+  report 100 * ( count employers with [mh_col = 0] / count employers)
+end
+; percent of informal employers by state
+to-report pctinformalemp01 report 100 * ( count employers with [mh_col = 0 and region = 1] / count employers with [region = 1]) end
+to-report pctinformalemp02 report 100 * ( count employers with [mh_col = 0 and region = 2] / count employers with [region = 2]) end
+to-report pctinformalemp03 report 100 * ( count employers with [mh_col = 0 and region = 3] / count employers with [region = 3]) end
+to-report pctinformalemp04 report 100 * ( count employers with [mh_col = 0 and region = 4] / count employers with [region = 4]) end
+to-report pctinformalemp05 report 100 * ( count employers with [mh_col = 0 and region = 5] / count employers with [region = 5]) end
+to-report pctinformalemp06 report 100 * ( count employers with [mh_col = 0 and region = 6] / count employers with [region = 6]) end
+to-report pctinformalemp07 report 100 * ( count employers with [mh_col = 0 and region = 7] / count employers with [region = 7]) end
+to-report pctinformalemp08 report 100 * ( count employers with [mh_col = 0 and region = 8] / count employers with [region = 8]) end
+to-report pctinformalemp09 report 100 * ( count employers with [mh_col = 0 and region = 9] / count employers with [region = 9]) end
+to-report pctinformalemp10 report 100 * ( count employers with [mh_col = 0 and region = 10] / count employers with [region = 10]) end
+to-report pctinformalemp11 report 100 * ( count employers with [mh_col = 0 and region = 11] / count employers with [region = 11]) end
+to-report pctinformalemp12 report 100 * ( count employers with [mh_col = 0 and region = 12] / count employers with [region = 12]) end
+to-report pctinformalemp13 report 100 * ( count employers with [mh_col = 0 and region = 13] / count employers with [region = 13]) end
+to-report pctinformalemp14 report 100 * ( count employers with [mh_col = 0 and region = 14] / count employers with [region = 14]) end
+to-report pctinformalemp15 report 100 * ( count employers with [mh_col = 0 and region = 15] / count employers with [region = 15]) end
+to-report pctinformalemp16 report 100 * ( count employers with [mh_col = 0 and region = 16] / count employers with [region = 16]) end
+to-report pctinformalemp17 report 100 * ( count employers with [mh_col = 0 and region = 17] / count employers with [region = 17]) end
+to-report pctinformalemp18 report 100 * ( count employers with [mh_col = 0 and region = 18] / count employers with [region = 18]) end
+to-report pctinformalemp19 report 100 * ( count employers with [mh_col = 0 and region = 19] / count employers with [region = 19]) end
+to-report pctinformalemp20 report 100 * ( count employers with [mh_col = 0 and region = 20] / count employers with [region = 20]) end
+to-report pctinformalemp21 report 100 * ( count employers with [mh_col = 0 and region = 21] / count employers with [region = 21]) end
+to-report pctinformalemp22 report 100 * ( count employers with [mh_col = 0 and region = 22] / count employers with [region = 22]) end
+to-report pctinformalemp23 report 100 * ( count employers with [mh_col = 0 and region = 23] / count employers with [region = 23]) end
+to-report pctinformalemp24 report 100 * ( count employers with [mh_col = 0 and region = 24] / count employers with [region = 24]) end
+to-report pctinformalemp25 report 100 * ( count employers with [mh_col = 0 and region = 25] / count employers with [region = 25]) end
+to-report pctinformalemp26 report 100 * ( count employers with [mh_col = 0 and region = 26] / count employers with [region = 26]) end
+to-report pctinformalemp27 report 100 * ( count employers with [mh_col = 0 and region = 27] / count employers with [region = 27]) end
+to-report pctinformalemp28 report 100 * ( count employers with [mh_col = 0 and region = 28] / count employers with [region = 28]) end
+to-report pctinformalemp29 report 100 * ( count employers with [mh_col = 0 and region = 29] / count employers with [region = 29]) end
+to-report pctinformalemp30 report 100 * ( count employers with [mh_col = 0 and region = 30] / count employers with [region = 30]) end
+to-report pctinformalemp31 report 100 * ( count employers with [mh_col = 0 and region = 31] / count employers with [region = 31]) end
+to-report pctinformalemp32 report 100 * ( count employers with [mh_col = 0 and region = 32] / count employers with [region = 32]) end
+
+
+to-report pct-GDP-informal
+  report 100 * ( sum [production] of employers with [mh_col = 0] / sum [production] of employers)
+end
+
+to-report avg-age
+  report mean [eda] of employers
 end
 
 ; Abreviaturas en código ISO 3166-2
@@ -691,21 +979,10 @@ NIL
 0
 
 MONITOR
-918
-311
-997
-356
-No. auditors
-count auditors
-0
-1
-11
-
-MONITOR
-763
-261
-849
-306
+1247
+376
+1335
+421
 No. employers
 count employers
 0
@@ -713,12 +990,12 @@ count employers
 11
 
 MONITOR
-763
-311
-917
-356
+1012
+376
+1176
+421
 GDP of informal economy (%)
-100 * ( sum [payroll] of employers with [mh_col = 0] / sum [payroll] of employers)
+pct-GDP-informal
 2
 1
 11
@@ -731,34 +1008,34 @@ CHOOSER
 scale-for-number-of-employers
 scale-for-number-of-employers
 "1:2,000" "1:3,000" "1:4,000" "1:5,000" "test"
-0
+1
 
 PLOT
-763
-13
-998
-133
+1247
+11
+1482
+131
 Distribution of payroll
-NIL
-NIL
+$
+Freq
 0.0
 10.0
 0.0
 10.0
 true
 false
-"set-plot-x-range 0 round max [payroll] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers" ""
+"set-plot-x-range 0 round max [payroll] of employers\nset-plot-y-range 0 sqrt count employers\nset-histogram-num-bars sqrt count employers\nset-plot-pen-mode 1\nset-plot-pen-color 1\nhistogram [payroll] of employers" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [payroll] of employers"
+"pen-0" 1.0 0 -7500403 true "" ""
 
 PLOT
-763
-135
-998
-255
+1247
+133
+1482
+253
 Age distribution
-NIL
-NIL
+Age
+Freq
 0.0
 10.0
 0.0
@@ -785,12 +1062,12 @@ NIL
 HORIZONTAL
 
 MONITOR
-850
-261
-997
-306
+1336
+376
+1482
+421
 % of informal employers
-100 * ( count employers with [mh_col = 0] / count employers)
+pct-informal-emp
 2
 1
 11
@@ -804,7 +1081,7 @@ SLIDER
 π
 0.1
 1
-0.3
+0.5
 0.01
 1
 NIL
@@ -826,13 +1103,13 @@ NIL
 HORIZONTAL
 
 PLOT
-1000
-13
-1234
-133
+1247
+254
+1482
+374
 Probability of become formal
-NIL
-NIL
+Prob (Y= Formal)
+Freq
 0.0
 10.0
 0.0
@@ -904,31 +1181,32 @@ Tax collection
 1
 
 PLOT
-1235
-13
-1469
-133
+753
+11
+1011
+131
 The Extent of Tax Evasion
 month
-NIL
+Ratio
 0.0
 10.0
 0.0
 10.0
 true
-false
+true
 "set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot ETE"
+"Total" 1.0 0 -16777216 true "" "plot ETE"
+"Formal" 1.0 0 -15302303 true "" "plot ETE-formal"
 
 PLOT
-1235
-135
-1469
-255
+1012
+133
+1246
+253
 Collected penalties
 month
-NIL
+$
 0.0
 10.0
 0.0
@@ -937,16 +1215,16 @@ true
 false
 "set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
 PENS
-"Penalties" 1.0 0 -955883 true "" "plot sum [penalty-collected] of auditors"
+"Penalties" 1.0 0 -5298144 true "" "plot penalties-collected"
 
 PLOT
-1000
-135
-1234
-255
+1012
+11
+1246
+131
 Collected tax
 month
-NIL
+$
 0.0
 10.0
 0.0
@@ -955,7 +1233,7 @@ true
 false
 "set-plot-x-range 0 120" ""
 PENS
-"default" 1.0 0 -14835848 true "" "plot sum [tax-collected] of auditors"
+"default" 1.0 0 -13345367 true "" "plot taxes-collected"
 
 TEXTBOX
 11
@@ -976,7 +1254,7 @@ SLIDER
 Δθ
 -3
 3
-0.0
+0.8
 0.5
 1
 %
@@ -991,7 +1269,7 @@ SLIDER
 ΔPI
 -15
 15
-0.0
+10.0
 1
 1
 %
@@ -1112,6 +1390,106 @@ Abbrev-states
 0
 1
 -1000
+
+PLOT
+753
+133
+1011
+253
+Undeclared tax
+month
+$
+0.0
+10.0
+0.0
+10.0
+true
+true
+"set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
+PENS
+"Total" 1.0 0 -16777216 true "" "plot evasion"
+"Formal" 1.0 0 -15302303 true "" "plot evasion-formal"
+
+PLOT
+753
+254
+1011
+374
+Types of taxpayer
+Month
+Ratio
+0.0
+10.0
+0.0
+10.0
+true
+true
+"set-plot-x-range 0 120\nset-plot-y-range 0 precision 0.5 1" ""
+PENS
+"Evasor" 1.0 0 -5298144 true "" "plot full-evasor"
+"Partial" 1.0 0 -4079321 true "" "plot partial-compliant"
+"Compliant" 1.0 0 -15302303 true "" "plot compliant"
+
+PLOT
+1012
+254
+1246
+374
+Number of audits
+Month
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot audits"
+
+MONITOR
+1177
+376
+1246
+421
+Avg. Age
+avg-age
+0
+1
+11
+
+MONITOR
+852
+376
+931
+421
+Lower
+(word  state-min-collected \": $ \" min-tax-collected)
+0
+1
+11
+
+TEXTBOX
+756
+377
+853
+419
+States with the lowest and highest tax collections
+11
+0.0
+1
+
+MONITOR
+932
+376
+1011
+421
+Higher
+(word  state-max-collected \": $ \" max-tax-collected)
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1483,14 +1861,287 @@ NetLogo 6.2.0
   <experiment name="experiment" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="40"/>
-    <metric>e94</metric>
-    <metric>e95</metric>
-    <metric>e96</metric>
-    <steppedValueSet variable="α" first="0.05" step="0.05" last="0.25"/>
-    <steppedValueSet variable="π" first="0.05" step="0.05" last="0.45"/>
-    <enumeratedValueSet variable="τ">
+    <timeLimit steps="35"/>
+    <metric>ETE</metric>
+    <metric>ETE-formal</metric>
+    <metric>taxes-collected</metric>
+    <metric>penalties-collected</metric>
+    <metric>evasion</metric>
+    <metric>evasion-formal</metric>
+    <metric>full-evasor</metric>
+    <metric>partial-compliant</metric>
+    <metric>compliant</metric>
+    <metric>pct-GDP-informal</metric>
+    <metric>pct-informal-emp</metric>
+    <metric>min-tax-collected</metric>
+    <metric>max-tax-collected</metric>
+    <enumeratedValueSet variable="π">
+      <value value="0.45"/>
       <value value="0.5"/>
+      <value value="0.75"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Δθ">
+      <value value="-1"/>
+      <value value="-0.8"/>
+      <value value="-0.6"/>
+      <value value="-0.5"/>
+      <value value="-0.4"/>
+      <value value="-0.3"/>
+      <value value="-0.2"/>
+      <value value="-0.1"/>
+      <value value="0"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.8"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="35"/>
+    <metric>ETE</metric>
+    <metric>ETE-formal</metric>
+    <metric>taxes-collected</metric>
+    <metric>penalties-collected</metric>
+    <metric>evasion</metric>
+    <metric>evasion-formal</metric>
+    <metric>full-evasor</metric>
+    <metric>partial-compliant</metric>
+    <metric>compliant</metric>
+    <metric>pct-GDP-informal</metric>
+    <metric>pct-informal-emp</metric>
+    <metric>min-tax-collected</metric>
+    <metric>max-tax-collected</metric>
+    <metric>ETE01</metric>
+    <metric>ETE02</metric>
+    <metric>ETE03</metric>
+    <metric>ETE04</metric>
+    <metric>ETE05</metric>
+    <metric>ETE06</metric>
+    <metric>ETE07</metric>
+    <metric>ETE08</metric>
+    <metric>ETE09</metric>
+    <metric>ETE10</metric>
+    <metric>ETE11</metric>
+    <metric>ETE12</metric>
+    <metric>ETE13</metric>
+    <metric>ETE14</metric>
+    <metric>ETE15</metric>
+    <metric>ETE16</metric>
+    <metric>ETE17</metric>
+    <metric>ETE18</metric>
+    <metric>ETE19</metric>
+    <metric>ETE20</metric>
+    <metric>ETE21</metric>
+    <metric>ETE22</metric>
+    <metric>ETE23</metric>
+    <metric>ETE24</metric>
+    <metric>ETE25</metric>
+    <metric>ETE26</metric>
+    <metric>ETE27</metric>
+    <metric>ETE28</metric>
+    <metric>ETE29</metric>
+    <metric>ETE30</metric>
+    <metric>ETE31</metric>
+    <metric>ETE32</metric>
+    <metric>undeclared01</metric>
+    <metric>undeclared02</metric>
+    <metric>undeclared03</metric>
+    <metric>undeclared04</metric>
+    <metric>undeclared05</metric>
+    <metric>undeclared06</metric>
+    <metric>undeclared07</metric>
+    <metric>undeclared08</metric>
+    <metric>undeclared09</metric>
+    <metric>undeclared10</metric>
+    <metric>undeclared11</metric>
+    <metric>undeclared12</metric>
+    <metric>undeclared13</metric>
+    <metric>undeclared14</metric>
+    <metric>undeclared15</metric>
+    <metric>undeclared16</metric>
+    <metric>undeclared17</metric>
+    <metric>undeclared18</metric>
+    <metric>undeclared19</metric>
+    <metric>undeclared20</metric>
+    <metric>undeclared21</metric>
+    <metric>undeclared22</metric>
+    <metric>undeclared23</metric>
+    <metric>undeclared24</metric>
+    <metric>undeclared25</metric>
+    <metric>undeclared26</metric>
+    <metric>undeclared27</metric>
+    <metric>undeclared28</metric>
+    <metric>undeclared29</metric>
+    <metric>undeclared30</metric>
+    <metric>undeclared31</metric>
+    <metric>undeclared32</metric>
+    <metric>taxes01</metric>
+    <metric>taxes02</metric>
+    <metric>taxes03</metric>
+    <metric>taxes04</metric>
+    <metric>taxes05</metric>
+    <metric>taxes06</metric>
+    <metric>taxes07</metric>
+    <metric>taxes08</metric>
+    <metric>taxes09</metric>
+    <metric>taxes10</metric>
+    <metric>taxes11</metric>
+    <metric>taxes12</metric>
+    <metric>taxes13</metric>
+    <metric>taxes14</metric>
+    <metric>taxes15</metric>
+    <metric>taxes16</metric>
+    <metric>taxes17</metric>
+    <metric>taxes18</metric>
+    <metric>taxes19</metric>
+    <metric>taxes20</metric>
+    <metric>taxes21</metric>
+    <metric>taxes22</metric>
+    <metric>taxes23</metric>
+    <metric>taxes24</metric>
+    <metric>taxes25</metric>
+    <metric>taxes26</metric>
+    <metric>taxes27</metric>
+    <metric>taxes28</metric>
+    <metric>taxes29</metric>
+    <metric>taxes30</metric>
+    <metric>taxes31</metric>
+    <metric>taxes32</metric>
+    <metric>penalties01</metric>
+    <metric>penalties02</metric>
+    <metric>penalties03</metric>
+    <metric>penalties04</metric>
+    <metric>penalties05</metric>
+    <metric>penalties06</metric>
+    <metric>penalties07</metric>
+    <metric>penalties08</metric>
+    <metric>penalties09</metric>
+    <metric>penalties10</metric>
+    <metric>penalties11</metric>
+    <metric>penalties12</metric>
+    <metric>penalties13</metric>
+    <metric>penalties14</metric>
+    <metric>penalties15</metric>
+    <metric>penalties16</metric>
+    <metric>penalties17</metric>
+    <metric>penalties18</metric>
+    <metric>penalties19</metric>
+    <metric>penalties20</metric>
+    <metric>penalties21</metric>
+    <metric>penalties22</metric>
+    <metric>penalties23</metric>
+    <metric>penalties24</metric>
+    <metric>penalties25</metric>
+    <metric>penalties26</metric>
+    <metric>penalties27</metric>
+    <metric>penalties28</metric>
+    <metric>penalties29</metric>
+    <metric>penalties30</metric>
+    <metric>penalties31</metric>
+    <metric>penalties32</metric>
+    <metric>pctinformalemp01</metric>
+    <metric>pctinformalemp02</metric>
+    <metric>pctinformalemp03</metric>
+    <metric>pctinformalemp04</metric>
+    <metric>pctinformalemp05</metric>
+    <metric>pctinformalemp06</metric>
+    <metric>pctinformalemp07</metric>
+    <metric>pctinformalemp08</metric>
+    <metric>pctinformalemp09</metric>
+    <metric>pctinformalemp10</metric>
+    <metric>pctinformalemp11</metric>
+    <metric>pctinformalemp12</metric>
+    <metric>pctinformalemp13</metric>
+    <metric>pctinformalemp14</metric>
+    <metric>pctinformalemp15</metric>
+    <metric>pctinformalemp16</metric>
+    <metric>pctinformalemp17</metric>
+    <metric>pctinformalemp18</metric>
+    <metric>pctinformalemp19</metric>
+    <metric>pctinformalemp20</metric>
+    <metric>pctinformalemp21</metric>
+    <metric>pctinformalemp22</metric>
+    <metric>pctinformalemp23</metric>
+    <metric>pctinformalemp24</metric>
+    <metric>pctinformalemp25</metric>
+    <metric>pctinformalemp26</metric>
+    <metric>pctinformalemp27</metric>
+    <metric>pctinformalemp28</metric>
+    <metric>pctinformalemp29</metric>
+    <metric>pctinformalemp30</metric>
+    <metric>pctinformalemp31</metric>
+    <metric>pctinformalemp32</metric>
+    <metric>compliant01</metric>
+    <metric>compliant02</metric>
+    <metric>compliant03</metric>
+    <metric>compliant04</metric>
+    <metric>compliant05</metric>
+    <metric>compliant06</metric>
+    <metric>compliant07</metric>
+    <metric>compliant08</metric>
+    <metric>compliant09</metric>
+    <metric>compliant10</metric>
+    <metric>compliant11</metric>
+    <metric>compliant12</metric>
+    <metric>compliant13</metric>
+    <metric>compliant14</metric>
+    <metric>compliant15</metric>
+    <metric>compliant16</metric>
+    <metric>compliant17</metric>
+    <metric>compliant18</metric>
+    <metric>compliant19</metric>
+    <metric>compliant20</metric>
+    <metric>compliant21</metric>
+    <metric>compliant22</metric>
+    <metric>compliant23</metric>
+    <metric>compliant24</metric>
+    <metric>compliant25</metric>
+    <metric>compliant26</metric>
+    <metric>compliant27</metric>
+    <metric>compliant28</metric>
+    <metric>compliant29</metric>
+    <metric>compliant30</metric>
+    <metric>compliant31</metric>
+    <metric>compliant32</metric>
+    <enumeratedValueSet variable="Δθ">
+      <value value="-0.5"/>
+      <value value="-0.4"/>
+      <value value="-0.3"/>
+      <value value="-0.2"/>
+      <value value="-0.1"/>
+      <value value="0"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ΔPI">
+      <value value="-15"/>
+      <value value="-10"/>
+      <value value="-7"/>
+      <value value="-5"/>
+      <value value="-4"/>
+      <value value="-3"/>
+      <value value="-2"/>
+      <value value="-1"/>
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+      <value value="4"/>
+      <value value="5"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="15"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
