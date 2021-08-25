@@ -22,3 +22,58 @@ install.packages("readr")
 
 #### Netlogo
 Configure the R extention appropriately. 
+
+### ODD protocol
+
+#### Overview
+##### Purpose
+
+
+##### Entities, state variables, and scales
+-   Agents: 
+-   Environment: 
+-   State variables: 
+-   Scales:
+
+##### Process overview and scheduling
+
+1.
+2.
+3.
+4.
+5.
+
+#### Design concepts
+##### Basic Principles
+
+##### Emergence
+
+##### Adaptation
+
+##### Objectives
+
+##### Learning
+
+##### Prediction
+
+##### Sensing
+
+##### Interaction
+
+##### Stochasticity
+
+##### Collectives
+
+##### Observation
+
+
+#### Details
+
+##### Initialization
+
+##### Input data
+
+##### Submodels
+
+
+### References
