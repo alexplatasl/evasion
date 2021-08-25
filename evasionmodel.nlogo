@@ -108,8 +108,8 @@ to setup-ML
   r:eval "library(readr)"
   ;rfmodel2 - regression
   ;rfmodel1 - classification
-  ;r:eval "rf <- readRDS('D:/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
-  r:eval "rf <- readRDS('C:/Users/User/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
+  r:eval "rf <- readRDS('D:/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
+  ;r:eval "rf <- readRDS('C:/Users/User/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
 end
 
 to setup-patches
@@ -1008,7 +1008,7 @@ CHOOSER
 scale-for-number-of-employers
 scale-for-number-of-employers
 "1:2,000" "1:3,000" "1:4,000" "1:5,000" "test"
-1
+0
 
 PLOT
 1247
@@ -1081,7 +1081,7 @@ SLIDER
 π
 0.1
 1
-0.5
+0.75
 0.01
 1
 NIL
@@ -1254,7 +1254,7 @@ SLIDER
 Δθ
 -3
 3
-0.8
+0.0
 0.5
 1
 %
@@ -1269,7 +1269,7 @@ SLIDER
 ΔPI
 -15
 15
-10.0
+0.0
 1
 1
 %
@@ -1492,41 +1492,85 @@ Higher
 11
 
 @#$#@#$#@
-## WHAT IS IT?
+## An agent-based simulation assisted by machine learning for the analysis of payroll tax evasion
+Alejandro Platas-López & Alejandro Guerra-Hernández
 
-(a general understanding of what the model is trying to show or explain)
+### Introduction
+Tax evasion is an illegal and intentional activity taken by individuals to reduce their legally due tax obligations. With the large amount of data available in the National Institute of Statistics and Geography, this model introduces an agent-based model and simulation linked to a machine-learning model for the analysis of payroll tax evasion, a kind of tax that employers must paid on the wages and salaries of employees. 
 
-## HOW IT WORKS
+Each state has autonomy over the way in which the payroll tax is collected. Therefore, to model these different fiscal scenarios and their effects, an explicit representation of the space is made through a Geographic Information System with hexagonal tessellation. The effects of quality in the provision of public goods, on tax compliance are also explored. 
 
-(what rules the agents use to create the overall behavior of the model)
+A priori, a random forest model is obtained from the National Survey of Occupation and Employment and the National Survey of Quality and Government Impact. At the beginning of simulation employer agents in the model get some properties directly from the data set and use the learned model to derive some others during the simulation. Within the framework presented by Hokamp (2014), novel insights into payroll tax compliance driven by the quality of public goods provision, and social norms are presented. 
 
-## HOW TO USE IT
+Taxpayers rely on Allingham and Sandmo's expected utility maximization. So, in each period, the decision on the amount to be declared made by the employers, is the one that maximizes their utility. The model is defined following the ODD (Overview, Design concepts, and Details) Protocol and implemented in NetLogo. Since this approach capture complex real-world phenomena more realistically, the model is promoted as a toolbox for studying fiscal and public policy implications in tax collection. It was found that the perception of the quality of the goods provided by the state has a significant effect on the collection of taxes. Finally, our sensitivity analysis provides numerical estimates that reveal the strong impact of the penalty and tax rate on tax evasion.
 
-(how to use the model, including a description of each of the items in the Interface tab)
+### Configuration
+#### R
+Install the following R packages from CRAN, just run
 
-## THINGS TO NOTICE
+```R
+install.packages("rJava")
+install.packages("ranger")
+install.packages("readr")
+```
 
-(suggested things for the user to notice while running the model)
+#### Netlogo
+Configure the R extention appropriately. 
 
-## THINGS TO TRY
+### ODD protocol
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+#### Overview
+##### Purpose
 
-## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+##### Entities, state variables, and scales
+-   Agents: 
+-   Environment: 
+-   State variables: 
+-   Scales:
 
-## NETLOGO FEATURES
+##### Process overview and scheduling
 
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
+1.
+2.
+3.
+4.
+5.
 
-## RELATED MODELS
+#### Design concepts
+##### Basic Principles
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+##### Emergence
 
-## CREDITS AND REFERENCES
+##### Adaptation
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+##### Objectives
+
+##### Learning
+
+##### Prediction
+
+##### Sensing
+
+##### Interaction
+
+##### Stochasticity
+
+##### Collectives
+
+##### Observation
+
+
+#### Details
+
+##### Initialization
+
+##### Input data
+
+##### Submodels
+
+
+### References
 @#$#@#$#@
 default
 true
