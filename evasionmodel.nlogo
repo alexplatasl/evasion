@@ -1,6 +1,6 @@
 ; Model of Tax evasion
 
-extensions [ gis csv R palette ]
+extensions [ gis csv R palette pathdir]
 
 breed[employers employer]     ; employers in the simulation
 breed[auditors auditor]       ; auditors in the simulation
@@ -108,8 +108,8 @@ to setup-ML
   r:eval "library(readr)"
   ;rfmodel2 - regression
   ;rfmodel1 - classification
-  r:eval "rf <- readRDS('D:/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
-  ;r:eval "rf <- readRDS('C:/Users/User/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
+  ;r:eval "rf <- readRDS('D:/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
+  r:eval str-replace replace-item 15 "rf <- readRDS('P\\rfmodel2.rds')" pathdir:get-model-path
 end
 
 to setup-patches
@@ -562,12 +562,28 @@ to paint-patches
     set plabel-color 1
   ]
 
+  ; export world and interface
+  ;if (ticks > 0 and ticks mod 12 = 0)[
+  ;  export-view (word "export/view/view-"  ticks ".png")
+  ;  export-interface (word "export/inte/inte-"  ticks ".png")
+  ;]
+
 end
 
 
 ;-----------------------------------------------------------------------
 ; REPORTERS
 ; TODO: Add reporters for plots and outputs
+
+to-report str-replace [ str ]
+  let where position "\\" str
+  ifelse is-number? where
+  [
+    report str-replace replace-item ( position "\\" str) str "/"
+  ][
+    report str
+  ]
+end
 
 to-report gibrat [ mn std ]
   let s2 std ^ 2
