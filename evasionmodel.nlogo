@@ -280,7 +280,7 @@ to go
   ; A tick will represent a month
   if (ticks >= 120 ) [stop]
   ; Process overview and scheduling
-  choose-market-beta
+  choose-market
   declaration
   tax-collection
   tax-audit
@@ -295,7 +295,7 @@ end
 ; In this process employers, based on their attributes and sensed environment, decide to be in formal or informal sector
 ; The global variable τ (tau) will be changed in order to change de decisión threshold of employer
 
-to choose-market-beta
+to choose-market
   set audits 0
   if (ticks > 0 and ticks mod 12 = 0)[
     (r:putagentdf "newdata" employers "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
@@ -309,19 +309,6 @@ to choose-market-beta
         set mh_col ifelse-value (item n probability > τ ) [1] [0]
         set n n + 1
       ]
-    ]
-  ]
-end
-
-to choose-market
-  set audits 0
-  if (ticks > 0 and ticks mod 12 = 0)[
-    ask employers [
-      (r:putagentdf "newdata" self "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
-      r:eval "predict <- predict(rf, data = newdata)"
-      let probability r:get "predict$predictions"
-      set prob-formal probability
-      set mh_col ifelse-value (probability > τ ) [1] [0]
     ]
   ]
 end
