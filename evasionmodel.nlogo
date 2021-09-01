@@ -1918,7 +1918,7 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="35"/>
@@ -1935,7 +1935,213 @@ NetLogo 6.2.0
     <metric>pct-informal-emp</metric>
     <metric>min-tax-collected</metric>
     <metric>max-tax-collected</metric>
+    <metric>ETE01</metric>
+    <metric>ETE02</metric>
+    <metric>ETE03</metric>
+    <metric>ETE04</metric>
+    <metric>ETE05</metric>
+    <metric>ETE06</metric>
+    <metric>ETE07</metric>
+    <metric>ETE08</metric>
+    <metric>ETE09</metric>
+    <metric>ETE10</metric>
+    <metric>ETE11</metric>
+    <metric>ETE12</metric>
+    <metric>ETE13</metric>
+    <metric>ETE14</metric>
+    <metric>ETE15</metric>
+    <metric>ETE16</metric>
+    <metric>ETE17</metric>
+    <metric>ETE18</metric>
+    <metric>ETE19</metric>
+    <metric>ETE20</metric>
+    <metric>ETE21</metric>
+    <metric>ETE22</metric>
+    <metric>ETE23</metric>
+    <metric>ETE24</metric>
+    <metric>ETE25</metric>
+    <metric>ETE26</metric>
+    <metric>ETE27</metric>
+    <metric>ETE28</metric>
+    <metric>ETE29</metric>
+    <metric>ETE30</metric>
+    <metric>ETE31</metric>
+    <metric>ETE32</metric>
+    <metric>undeclared01</metric>
+    <metric>undeclared02</metric>
+    <metric>undeclared03</metric>
+    <metric>undeclared04</metric>
+    <metric>undeclared05</metric>
+    <metric>undeclared06</metric>
+    <metric>undeclared07</metric>
+    <metric>undeclared08</metric>
+    <metric>undeclared09</metric>
+    <metric>undeclared10</metric>
+    <metric>undeclared11</metric>
+    <metric>undeclared12</metric>
+    <metric>undeclared13</metric>
+    <metric>undeclared14</metric>
+    <metric>undeclared15</metric>
+    <metric>undeclared16</metric>
+    <metric>undeclared17</metric>
+    <metric>undeclared18</metric>
+    <metric>undeclared19</metric>
+    <metric>undeclared20</metric>
+    <metric>undeclared21</metric>
+    <metric>undeclared22</metric>
+    <metric>undeclared23</metric>
+    <metric>undeclared24</metric>
+    <metric>undeclared25</metric>
+    <metric>undeclared26</metric>
+    <metric>undeclared27</metric>
+    <metric>undeclared28</metric>
+    <metric>undeclared29</metric>
+    <metric>undeclared30</metric>
+    <metric>undeclared31</metric>
+    <metric>undeclared32</metric>
+    <metric>taxes01</metric>
+    <metric>taxes02</metric>
+    <metric>taxes03</metric>
+    <metric>taxes04</metric>
+    <metric>taxes05</metric>
+    <metric>taxes06</metric>
+    <metric>taxes07</metric>
+    <metric>taxes08</metric>
+    <metric>taxes09</metric>
+    <metric>taxes10</metric>
+    <metric>taxes11</metric>
+    <metric>taxes12</metric>
+    <metric>taxes13</metric>
+    <metric>taxes14</metric>
+    <metric>taxes15</metric>
+    <metric>taxes16</metric>
+    <metric>taxes17</metric>
+    <metric>taxes18</metric>
+    <metric>taxes19</metric>
+    <metric>taxes20</metric>
+    <metric>taxes21</metric>
+    <metric>taxes22</metric>
+    <metric>taxes23</metric>
+    <metric>taxes24</metric>
+    <metric>taxes25</metric>
+    <metric>taxes26</metric>
+    <metric>taxes27</metric>
+    <metric>taxes28</metric>
+    <metric>taxes29</metric>
+    <metric>taxes30</metric>
+    <metric>taxes31</metric>
+    <metric>taxes32</metric>
+    <metric>penalties01</metric>
+    <metric>penalties02</metric>
+    <metric>penalties03</metric>
+    <metric>penalties04</metric>
+    <metric>penalties05</metric>
+    <metric>penalties06</metric>
+    <metric>penalties07</metric>
+    <metric>penalties08</metric>
+    <metric>penalties09</metric>
+    <metric>penalties10</metric>
+    <metric>penalties11</metric>
+    <metric>penalties12</metric>
+    <metric>penalties13</metric>
+    <metric>penalties14</metric>
+    <metric>penalties15</metric>
+    <metric>penalties16</metric>
+    <metric>penalties17</metric>
+    <metric>penalties18</metric>
+    <metric>penalties19</metric>
+    <metric>penalties20</metric>
+    <metric>penalties21</metric>
+    <metric>penalties22</metric>
+    <metric>penalties23</metric>
+    <metric>penalties24</metric>
+    <metric>penalties25</metric>
+    <metric>penalties26</metric>
+    <metric>penalties27</metric>
+    <metric>penalties28</metric>
+    <metric>penalties29</metric>
+    <metric>penalties30</metric>
+    <metric>penalties31</metric>
+    <metric>penalties32</metric>
+    <metric>pctinformalemp01</metric>
+    <metric>pctinformalemp02</metric>
+    <metric>pctinformalemp03</metric>
+    <metric>pctinformalemp04</metric>
+    <metric>pctinformalemp05</metric>
+    <metric>pctinformalemp06</metric>
+    <metric>pctinformalemp07</metric>
+    <metric>pctinformalemp08</metric>
+    <metric>pctinformalemp09</metric>
+    <metric>pctinformalemp10</metric>
+    <metric>pctinformalemp11</metric>
+    <metric>pctinformalemp12</metric>
+    <metric>pctinformalemp13</metric>
+    <metric>pctinformalemp14</metric>
+    <metric>pctinformalemp15</metric>
+    <metric>pctinformalemp16</metric>
+    <metric>pctinformalemp17</metric>
+    <metric>pctinformalemp18</metric>
+    <metric>pctinformalemp19</metric>
+    <metric>pctinformalemp20</metric>
+    <metric>pctinformalemp21</metric>
+    <metric>pctinformalemp22</metric>
+    <metric>pctinformalemp23</metric>
+    <metric>pctinformalemp24</metric>
+    <metric>pctinformalemp25</metric>
+    <metric>pctinformalemp26</metric>
+    <metric>pctinformalemp27</metric>
+    <metric>pctinformalemp28</metric>
+    <metric>pctinformalemp29</metric>
+    <metric>pctinformalemp30</metric>
+    <metric>pctinformalemp31</metric>
+    <metric>pctinformalemp32</metric>
+    <metric>compliant01</metric>
+    <metric>compliant02</metric>
+    <metric>compliant03</metric>
+    <metric>compliant04</metric>
+    <metric>compliant05</metric>
+    <metric>compliant06</metric>
+    <metric>compliant07</metric>
+    <metric>compliant08</metric>
+    <metric>compliant09</metric>
+    <metric>compliant10</metric>
+    <metric>compliant11</metric>
+    <metric>compliant12</metric>
+    <metric>compliant13</metric>
+    <metric>compliant14</metric>
+    <metric>compliant15</metric>
+    <metric>compliant16</metric>
+    <metric>compliant17</metric>
+    <metric>compliant18</metric>
+    <metric>compliant19</metric>
+    <metric>compliant20</metric>
+    <metric>compliant21</metric>
+    <metric>compliant22</metric>
+    <metric>compliant23</metric>
+    <metric>compliant24</metric>
+    <metric>compliant25</metric>
+    <metric>compliant26</metric>
+    <metric>compliant27</metric>
+    <metric>compliant28</metric>
+    <metric>compliant29</metric>
+    <metric>compliant30</metric>
+    <metric>compliant31</metric>
+    <metric>compliant32</metric>
     <enumeratedValueSet variable="π">
+      <value value="0.15"/>
+      <value value="0.2"/>
+      <value value="0.25"/>
+      <value value="0.3"/>
+      <value value="0.35"/>
+      <value value="0.36"/>
+      <value value="0.37"/>
+      <value value="0.38"/>
+      <value value="0.39"/>
+      <value value="0.4"/>
+      <value value="0.41"/>
+      <value value="0.42"/>
+      <value value="0.43"/>
+      <value value="0.44"/>
       <value value="0.45"/>
       <value value="0.5"/>
       <value value="0.75"/>
@@ -1960,7 +2166,7 @@ NetLogo 6.2.0
       <value value="1"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="experiment" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="35"/>
@@ -2170,6 +2376,8 @@ NetLogo 6.2.0
     <metric>compliant31</metric>
     <metric>compliant32</metric>
     <enumeratedValueSet variable="Δθ">
+      <value value="-0.8"/>
+      <value value="-0.6"/>
       <value value="-0.5"/>
       <value value="-0.4"/>
       <value value="-0.3"/>
