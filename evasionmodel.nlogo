@@ -280,7 +280,7 @@ to go
   ; A tick will represent a month
   if (ticks >= 120 ) [stop]
   ; Process overview and scheduling
-  choose-market
+  choose-market-beta
   declaration
   tax-collection
   tax-audit
@@ -294,6 +294,25 @@ end
 ;;;; CHOOSE-MARKET
 ; In this process employers, based on their attributes and sensed environment, decide to be in formal or informal sector
 ; The global variable τ (tau) will be changed in order to change de decisión threshold of employer
+
+to choose-market-beta
+  set audits 0
+  if (ticks > 0 and ticks mod 12 = 0)[
+    (r:putagentdf "newdata" employers "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
+    r:eval "predict <- predict(rf, data = newdata)"
+    let probability r:get "round(predict$predictions, 3)"
+
+    let n 0
+    foreach sort employers [ the-employer ->
+      ask the-employer [
+        set prob-formal item n probability
+        set mh_col ifelse-value (item n probability > τ ) [1] [0]
+        set n n + 1
+      ]
+    ]
+  ]
+end
+
 to choose-market
   set audits 0
   if (ticks > 0 and ticks mod 12 = 0)[
@@ -495,23 +514,26 @@ to paint-patches
     ask patches with [pxcor > 40 and pxcor < 44 and pycor > 24 and pycor < 44][
       (ifelse
         color-palette = "viridis" [
-          set pcolor palette:scale-gradient [[253 231 37] [33 145 140] [68 1 84] ] pycor 24 44
+          set pcolor palette:scale-gradient [[ 68 1 84 ][ 68 58 131 ][ 49 104 142 ][ 33 144 140 ][ 53 183 121 ][ 143 215 68 ][ 253 231 37 ]] pycor 24 44
         ]
         color-palette = "inferno" [
-          set pcolor palette:scale-gradient [[252 255 164] [188 55 84] [0 0 4]] pycor 24 44
+          set pcolor palette:scale-gradient [[ 0 0 4 ][ 51 10 95 ][ 120 28 109 ][ 187 55 84 ][ 237 105 37 ][ 252 181 25 ][ 252 255 164 ]] pycor 24 44
         ]
         color-palette = "magma" [
-          set pcolor palette:scale-gradient [[252 253 191] [183 55 121] [0 0 4]] pycor 24 44
+          set pcolor palette:scale-gradient [[ 0 0 4 ][ 45 17 96 ][ 114 31 129 ][ 182 54 121 ][ 241 96 93 ][ 254 175 119 ][ 252 253 191 ]] pycor 24 44
         ]
         color-palette = "plasma" [
-          set pcolor palette:scale-gradient [[240 249 33] [204 71 120] [13 8 135]] pycor 24 44
+          set pcolor palette:scale-gradient [[ 13 8 135 ][ 93 1 166 ][ 156 23 158 ][ 204 70 120 ][ 237 121 83 ][ 253 179 47 ][ 240 249 33 ]] pycor 24 44
         ]
         color-palette = "cividis" [
-          set pcolor palette:scale-gradient [[255 234 70] [124 123 120] [0 32 77]] pycor 24 44
+          set pcolor palette:scale-gradient [[ 0 32 77 ][ 35 62 108 ][ 87 92 109 ][ 124 123 120 ][ 166 157 117 ][ 211 193 100 ][ 255 234 70 ]] pycor 24 44
         ]
         color-palette = "parula" [
           set pcolor palette:scale-gradient [[249 251 14] [51 183 160] [53 42 135]] pycor 24 44
         ]
+      color-palette = "turbo" [
+          set pcolor palette:scale-gradient [[ 48 18 59 ][ 70 134 251 ][ 26 228 182 ][ 162 252 60 ][ 250 186 57 ][ 228 70 10 ][ 122 4 3 ]] pycor 24 44
+      ]
       )
     ]
   ]
@@ -520,26 +542,29 @@ to paint-patches
   ask patches with [region > 0 or region < 0 or region = 0][
     let taxes sum [tax-collected] of auditors with [ent-auditor = [region] of myself]
     let penalties sum [penalty-collected] of auditors with [ent-auditor = [region] of myself]
-    let taxes+penalties taxes + penalties
+    let t+p taxes + penalties
 
     (ifelse
       color-palette = "viridis" [
-        set pcolor palette:scale-gradient [[253 231 37] [33 145 140] [68 1 84] ] taxes+penalties min-collection max-collection
+        set pcolor palette:scale-gradient [[ 68 1 84 ][ 68 58 131 ][ 49 104 142 ][ 33 144 140 ][ 53 183 121 ][ 143 215 68 ][ 253 231 37 ]] t+p min-collection max-collection
       ]
       color-palette = "inferno" [
-        set pcolor palette:scale-gradient [[252 255 164] [188 55 84] [0 0 4]] taxes+penalties min-collection max-collection
+        set pcolor palette:scale-gradient [[ 0 0 4 ][ 51 10 95 ][ 120 28 109 ][ 187 55 84 ][ 237 105 37 ][ 252 181 25 ][ 252 255 164 ]] t+p min-collection max-collection
       ]
       color-palette = "magma" [
-        set pcolor palette:scale-gradient [[252 253 191] [183 55 121] [0 0 4]] taxes+penalties min-collection max-collection
+        set pcolor palette:scale-gradient [[ 0 0 4 ][ 45 17 96 ][ 114 31 129 ][ 182 54 121 ][ 241 96 93 ][ 254 175 119 ][ 252 253 191 ]] t+p min-collection max-collection
       ]
       color-palette = "plasma" [
-        set pcolor palette:scale-gradient [[240 249 33] [204 71 120] [13 8 135]] taxes+penalties min-collection max-collection
+        set pcolor palette:scale-gradient [[ 13 8 135 ][ 93 1 166 ][ 156 23 158 ][ 204 70 120 ][ 237 121 83 ][ 253 179 47 ][ 240 249 33 ]] t+p min-collection max-collection
       ]
       color-palette = "cividis" [
-        set pcolor palette:scale-gradient [[255 234 70] [124 123 120] [0 32 77]] taxes+penalties min-collection max-collection
+        set pcolor palette:scale-gradient [[ 0 32 77 ][ 35 62 108 ][ 87 92 109 ][ 124 123 120 ][ 166 157 117 ][ 211 193 100 ][ 255 234 70 ]] t+p min-collection max-collection
       ]
       color-palette = "parula" [
-        set pcolor palette:scale-gradient [[249 251 14] [51 183 160] [53 42 135]] taxes+penalties min-collection max-collection
+        set pcolor palette:scale-gradient [[249 251 14] [51 183 160] [53 42 135]] t+p min-collection max-collection
+      ]
+      color-palette = "turbo" [
+        set pcolor palette:scale-gradient [[ 48 18 59 ][ 70 134 251 ][ 26 228 182 ][ 162 252 60 ][ 250 186 57 ][ 228 70 10 ][ 122 4 3 ]] t+p min-collection max-collection
       ]
     )
 
@@ -1393,7 +1418,7 @@ CHOOSER
 472
 color-palette
 color-palette
-"viridis" "inferno" "magma" "plasma" "cividis" "parula"
+"viridis" "inferno" "magma" "plasma" "cividis" "parula" "turbo"
 3
 
 SWITCH
