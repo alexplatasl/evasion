@@ -510,7 +510,7 @@ to paint-patches
           set pcolor palette:scale-gradient [[ 0 0 4 ][ 45 17 96 ][ 114 31 129 ][ 182 54 121 ][ 241 96 93 ][ 254 175 119 ][ 252 253 191 ]] pycor 24 44
         ]
         color-palette = "plasma" [
-          set pcolor palette:scale-gradient [[ 13 8 135 ][ 93 1 166 ][ 156 23 158 ][ 204 70 120 ][ 237 121 83 ][ 253 179 47 ][ 240 249 33 ]] pycor 24 44
+          set pcolor palette:scale-gradient [[ 240 249 33 ][ 253 179 47 ][ 237 121 83 ][ 204 70 120 ][ 156 23 158 ][ 93 1 166 ][ 13 8 135 ]] pycor 24 44
         ]
         color-palette = "cividis" [
           set pcolor palette:scale-gradient [[ 0 32 77 ][ 35 62 108 ][ 87 92 109 ][ 124 123 120 ][ 166 157 117 ][ 211 193 100 ][ 255 234 70 ]] pycor 24 44
@@ -542,7 +542,7 @@ to paint-patches
         set pcolor palette:scale-gradient [[ 0 0 4 ][ 45 17 96 ][ 114 31 129 ][ 182 54 121 ][ 241 96 93 ][ 254 175 119 ][ 252 253 191 ]] t+p min-collection max-collection
       ]
       color-palette = "plasma" [
-        set pcolor palette:scale-gradient [[ 13 8 135 ][ 93 1 166 ][ 156 23 158 ][ 204 70 120 ][ 237 121 83 ][ 253 179 47 ][ 240 249 33 ]] t+p min-collection max-collection
+        set pcolor palette:scale-gradient [[ 240 249 33 ][ 253 179 47 ][ 237 121 83 ][ 204 70 120 ][ 156 23 158 ][ 93 1 166 ][ 13 8 135 ]] t+p min-collection max-collection
       ]
       color-palette = "cividis" [
         set pcolor palette:scale-gradient [[ 0 32 77 ][ 35 62 108 ][ 87 92 109 ][ 124 123 120 ][ 166 157 117 ][ 211 193 100 ][ 255 234 70 ]] t+p min-collection max-collection
@@ -575,10 +575,10 @@ to paint-patches
   ]
 
   ; export world and interface
-  ;if (ticks > 0 and ticks mod 12 = 0)[
-  ;  export-view (word "export/view/view-"  ticks ".png")
+  if (ticks > 0 and ticks mod 3 = 0)[
+    export-view (word "export/view/view-"  ticks ".png")
   ;  export-interface (word "export/inte/inte-"  ticks ".png")
-  ;]
+  ]
 
 end
 
