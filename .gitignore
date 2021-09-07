@@ -1,0 +1,10 @@
+
+.evasionmodel.tmp.nlogo
+
+*.R
+
+*.RData
+
+.Rhistory
+
+^export
