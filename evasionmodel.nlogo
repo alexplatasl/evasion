@@ -292,7 +292,7 @@ to go
   tax-audit
   age-increase
   adjust-subjetive
-  paint-patches
+  visualization
 
   tick
 end
@@ -496,9 +496,9 @@ to age-increase
   ]
 end
 
-;;;; PAINT-PATCHES
-; For visualization purposes, this procedure colors the polygons according to the tax collection.
-to paint-patches
+;;;; VISUALIZATION
+; For visualization purposes, this procedure colors the polygons according to the tax collection and colors the agent according type of taxpayer.
+to visualization
   let max-collection max [tax-collected + penalty-collected] of auditors
   let min-collection min [tax-collected + penalty-collected] of auditors
 
@@ -580,11 +580,17 @@ to paint-patches
     set plabel-color 1
   ]
 
+  ; Update color of agents
+  ask employers with [type-of-taxpayer = 0][set color red]
+  ask employers with [type-of-taxpayer = 1][set color cyan]
+  ask employers with [type-of-taxpayer = 2][set color blue]
+
+
   ; export world and interface
-  if (ticks > 0 and ticks mod 3 = 0)[
-    export-view (word "export/view/view-"  ticks ".png")
+  ;if (ticks > 0 and ticks mod 3 = 0)[
+  ;  export-view (word "export/view/view-"  ticks ".png")
   ;  export-interface (word "export/inte/inte-"  ticks ".png")
-  ]
+  ;]
 
 end
 
@@ -1230,8 +1236,8 @@ true
 true
 "set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
 PENS
-"Total" 1.0 0 -16777216 true "" "plot ETE"
-"Formal" 1.0 0 -15302303 true "" "plot ETE-formal"
+"Total" 1.0 0 -7500403 true "" "plot ETE"
+"Formal" 1.0 0 -13345367 true "" "plot ETE-formal"
 
 PLOT
 1012
@@ -1441,8 +1447,8 @@ true
 true
 "set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
 PENS
-"Total" 1.0 0 -16777216 true "" "plot evasion"
-"Formal" 1.0 0 -15302303 true "" "plot evasion-formal"
+"Total" 1.0 0 -7500403 true "" "plot evasion"
+"Formal" 1.0 0 -13345367 true "" "plot evasion-formal"
 
 PLOT
 753
@@ -1461,8 +1467,8 @@ true
 "set-plot-x-range 0 120\nset-plot-y-range 0 precision 0.5 1" ""
 PENS
 "Evasor" 1.0 0 -5298144 true "" "plot full-evasor"
-"Partial" 1.0 0 -4079321 true "" "plot partial-compliant"
-"Compliant" 1.0 0 -15302303 true "" "plot compliant"
+"Partial" 1.0 0 -11221820 true "" "plot partial-compliant"
+"Compliant" 1.0 0 -13345367 true "" "plot compliant"
 
 PLOT
 1012
