@@ -239,16 +239,11 @@ to initialize-variables
   let alpha 3 / 2
   ask employers [
     ; Value of informal economy represents around 23% of total economy
+    let avg-income mean [ingocup] of employers with [ent = [ent] of myself]
     set production round ifelse-value (mh_col = 0)[
-      ;23.00 * pareto avg (std-dev + 0.1) alpha
-      ;23.00 * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.1) alpha
-      ;let average mean [ingocup] of employers with [ent = [ent] of myself]
-      (23.00 + ln (mean [ingocup] of employers with [ent = [ent] of myself]) ) * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.1) alpha
+      (23.00 + ln (avg-income) ) * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.1) alpha
     ][
-      ;50.00 * pareto avg (std-dev + 0.2) alpha
-      ;40.00 * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.3) alpha
-      ;let average mean [ingocup] of employers with [ent = [ent] of myself]
-      (50.00 + ln (mean [ingocup] of employers with [ent = [ent] of myself]) ) * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.2) alpha
+      (50.00 + ln (avg-income) ) * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.2) alpha
     ]
     ; Participacion of salaries in PIB are around %30 and %40
     set payroll floor production * 0.30
@@ -497,7 +492,7 @@ to age-increase
 end
 
 ;;;; VISUALIZATION
-; For visualization purposes, this procedure colors the polygons according to the tax collection and colors the agent according type of taxpayer.
+; For visualization purposes, this procedure colors the polygons according to the tax collection and colors the employers according their type of taxpayer.
 to visualization
   let max-collection max [tax-collected + penalty-collected] of auditors
   let min-collection min [tax-collected + penalty-collected] of auditors
@@ -1121,7 +1116,7 @@ SLIDER
 π
 0.1
 1
-0.75
+0.5
 0.01
 1
 NIL
