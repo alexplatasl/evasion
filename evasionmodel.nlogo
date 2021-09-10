@@ -240,9 +240,15 @@ to initialize-variables
   ask employers [
     ; Value of informal economy represents around 23% of total economy
     set production round ifelse-value (mh_col = 0)[
-      23.00 * pareto avg (std-dev + 0.1) alpha
+      ;23.00 * pareto avg (std-dev + 0.1) alpha
+      ;23.00 * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.1) alpha
+      ;let average mean [ingocup] of employers with [ent = [ent] of myself]
+      (23.00 + ln (mean [ingocup] of employers with [ent = [ent] of myself]) ) * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.1) alpha
     ][
-      50.00 * pareto avg (std-dev + 0.2) alpha
+      ;50.00 * pareto avg (std-dev + 0.2) alpha
+      ;40.00 * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.3) alpha
+      ;let average mean [ingocup] of employers with [ent = [ent] of myself]
+      (50.00 + ln (mean [ingocup] of employers with [ent = [ent] of myself]) ) * pareto (avg + (log (ambito2 + 1) 10)) (std-dev + 0.2) alpha
     ]
     ; Participacion of salaries in PIB are around %30 and %40
     set payroll floor production * 0.30
