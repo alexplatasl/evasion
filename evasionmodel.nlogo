@@ -1082,10 +1082,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [eda] of employers"
 
 SLIDER
-14
-413
-127
+15
 446
+128
+479
 τ
 τ
 0
@@ -1108,10 +1108,10 @@ pct-informal-emp
 11
 
 SLIDER
-8
-113
-128
+9
 146
+129
+179
 π
 π
 0.1
@@ -1123,10 +1123,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-8
-150
-128
+9
 183
+129
+216
 α
 α
 0
@@ -1156,10 +1156,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [prob-formal] of employers"
 
 SLIDER
-11
-208
-126
+12
 241
+127
+274
 ε-ap
 ε-ap
 0
@@ -1171,30 +1171,30 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-11
-191
-161
-209
+12
+224
+162
+242
 Effectiveness of
 11
 0.0
 1
 
 TEXTBOX
-136
-218
-249
-236
+137
+251
+250
+269
 Audit process
 11
 0.0
 1
 
 SLIDER
-11
-244
-126
+12
 277
+127
+310
 ε-tc
 ε-tc
 0
@@ -1206,10 +1206,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-135
-254
-250
-272
+136
+287
+251
+305
 Tax collection
 11
 0.0
@@ -1271,20 +1271,20 @@ PENS
 "default" 1.0 0 -13345367 true "" "plot taxes-collected"
 
 TEXTBOX
-11
-286
-161
-304
+12
+319
+162
+337
 decrease / increase 
 11
 0.0
 1
 
 SLIDER
-14
-305
-127
+15
 338
+128
+371
 Δθ
 Δθ
 -3
@@ -1296,10 +1296,10 @@ SLIDER
 HORIZONTAL
 
 SLIDER
-14
-341
-127
+15
 374
+128
+407
 ΔPI
 ΔPI
 -15
@@ -1311,60 +1311,60 @@ SLIDER
 HORIZONTAL
 
 TEXTBOX
-136
-315
-249
-333
+137
+348
+250
+366
 Tax rate
 11
 0.0
 1
 
 TEXTBOX
-136
-351
-248
-373
+137
+384
+249
+406
 Perceived insecurity\n
 11
 0.0
 1
 
 TEXTBOX
-10
-96
-160
-114
+11
+129
+161
+147
 Fiscal environment
 11
 0.0
 1
 
 TEXTBOX
-137
-123
-249
-141
+138
+156
+250
+174
 Penalty rate
 11
 0.0
 1
 
 TEXTBOX
-137
-160
-249
-178
+138
+193
+250
+211
 Audit probability
 11
 0.0
 1
 
 SLIDER
-14
-377
-127
+15
 410
+128
+443
 ΔPC
 ΔPC
 -15
@@ -1376,20 +1376,20 @@ SLIDER
 HORIZONTAL
 
 TEXTBOX
-136
-387
-250
-405
+137
+420
+251
+438
 Perceived corruption
 11
 0.0
 1
 
 TEXTBOX
-136
-418
-250
-446
+137
+451
+251
+479
 Decision threshold\nto be in formal sector
 11
 0.0
@@ -1525,6 +1525,17 @@ Higher
 0
 1
 11
+
+SWITCH
+9
+93
+178
+126
+machine-learning?
+machine-learning?
+0
+1
+-1000
 
 @#$#@#$#@
 ## An agent-based simulation assisted by machine learning for the analysis of payroll tax evasion
