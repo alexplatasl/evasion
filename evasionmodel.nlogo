@@ -17,20 +17,12 @@ employers-own [
   ; from ENOE
   t_loc
   ent
-  sex
   eda
-  n_hij
-  e_con
-  salario
   c_ocu11c
   ing7c
-  dur9c
   ambito2
   anios_esc
-  hrsocup
   ingocup
-  tcco
-  scian
   mh_col
   year
   tax
@@ -184,21 +176,13 @@ to setup-employers
 			; ENOE attributes
       set t_loc	item 0 data
       set ent	item 1 data
-      set sex	item 2 data
-      set eda	item 3 data
-      set n_hij	item 4 data
-      set e_con	item 5 data
-      set salario	item 6 data
-      set c_ocu11c	item 7 data
-      set ing7c	item 8 data
-      set dur9c	item 9 data
-      set ambito2	item 10 data
-      set anios_esc	item 11 data
-      set hrsocup	item 12 data
-      set ingocup	item 13 data
-      set tcco item 14 data
-      set scian	item 15 data
-      set mh_col item 16 data
+      set eda	item 2 data
+      set c_ocu11c	item 3 data
+      set ing7c	item 4 data
+      set ambito2	item 5 data
+      set anios_esc	item 6 data
+      set ingocup	item 7 data
+      set mh_col item 8 data
 
       move-to one-of patches with [not any? employers-here and region = [ent] of myself]
     ]
