@@ -103,13 +103,12 @@ to setup
 end
 
 to setup-ML
-  ; Load packages
-  r:eval "library(ranger)"
-  r:eval "library(readr)"
-  ;rfmodel2 - regression
-  ;rfmodel1 - classification
-  ;r:eval "rf <- readRDS('D:/Dropbox/Research/taxEvasion/evasion/rfmodel2.rds')"
-  r:eval str-replace replace-item 15 "rf <- readRDS('P\\rfmodel2.rds')" pathdir:get-model-path
+  if (machine-learning?)[
+    ; Load packages
+    r:eval "library(ranger)"
+    r:eval "library(readr)"
+    r:eval str-replace replace-item 15 "rf <- readRDS('P\\rfmodel2.rds')" pathdir:get-model-path
+  ]
 end
 
 to setup-patches
@@ -298,17 +297,19 @@ end
 
 to choose-market
   set audits 0
-  if (ticks > 0 and ticks mod 12 = 0)[
-    (r:putagentdf "newdata" employers "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
-    r:eval "predict <- predict(rf, data = newdata)"
-    let probability r:get "round(predict$predictions, 3)"
+  if (machine-learning?)[
+    if (ticks > 0 and ticks mod 12 = 0)[
+      (r:putagentdf "newdata" employers "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
+      r:eval "predict <- predict(rf, data = newdata)"
+      let probability r:get "round(predict$predictions, 3)"
 
-    let n 0
-    foreach sort employers [ the-employer ->
-      ask the-employer [
-        set prob-formal item n probability
-        set mh_col ifelse-value (item n probability > τ ) [1] [0]
-        set n n + 1
+      let n 0
+      foreach sort employers [ the-employer ->
+        ask the-employer [
+          set prob-formal item n probability
+          set mh_col ifelse-value (item n probability > τ ) [1] [0]
+          set n n + 1
+        ]
       ]
     ]
   ]
