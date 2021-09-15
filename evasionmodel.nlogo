@@ -10,9 +10,6 @@ breed[auditors auditor]       ; auditors in the simulation
 globals [
   mx-states
   ; to test wich equation is used
-  e94
-  e95
-  e96
   audits
 ]
 
@@ -350,7 +347,6 @@ to declaration
         set undeclared-payroll payroll
         set undeclared-tax θ * undeclared-payroll
         set type-of-taxpayer 0
-        set e94 e94 + 1
       ]
       α-s > eqn9.5 [
         set payroll* payroll ; employer becomes fully tax compliant
@@ -358,7 +354,6 @@ to declaration
         set undeclared-payroll 0
         set undeclared-tax 0
         set type-of-taxpayer 2
-        set e95 e95 + 1
       ]
       ; employer voluntarily declares:
       [
@@ -372,7 +367,6 @@ to declaration
         set undeclared-payroll payroll - payroll*
         set undeclared-tax θ * undeclared-payroll
         set type-of-taxpayer 1
-        set e96 e96 + 1
       ]
     )
   ]
