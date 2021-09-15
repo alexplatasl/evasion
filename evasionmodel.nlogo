@@ -25,7 +25,9 @@ employers-own [
   ingocup
   mh_col
   year
+  ; from the tax legislations
   tax
+  ; from ENCIG
   Corrupción
   Inseguridad
 
@@ -59,7 +61,7 @@ patches-own [
   ID
   region
 
-  tax-ent               ; Tax rate in each state
+  tax-ent               ; Tax rate in each state (tax legislation)
   Corrupción-ent        ; Perceived level of corruption (ENCIG)
   Inseguridad-ent       ; Perceived insecurity level (ENCIG)
 ]
