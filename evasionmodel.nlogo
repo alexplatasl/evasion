@@ -28,8 +28,8 @@ employers-own [
   ; from the tax legislations
   tax
   ; from ENCIG
-  Corrupción
-  Inseguridad
+  corruption
+  insecurity
 
   ; simulation variables
   production            ; value produced in period
@@ -130,8 +130,8 @@ to setup-map
 
   gis:apply-coverage mx-states "ID" region
   gis:apply-coverage mx-states "TAX" tax-ent
-  gis:apply-coverage mx-states "CORRUPCION" Corrupción-ent
-  gis:apply-coverage mx-states "INSEGURIDA" Inseguridad-ent
+  gis:apply-coverage mx-states "CORRUPTION" Corrupción-ent
+  gis:apply-coverage mx-states "INSECURITY" Inseguridad-ent
 
   ask patches with [region > 0 or region < 0 or region = 0][
     set pcolor green
@@ -243,8 +243,8 @@ to initialize-variables
 
     ; Get properties from state (patch)
     set tax max (list 0 ( [tax-ent] of patch-here + Δθ))
-    set Corrupción [Corrupción-ent] of patch-here + ( ΔPC / 100 )
-    set Inseguridad [Inseguridad-ent] of patch-here + ( ΔPI / 100 )
+    set corruption [Corrupción-ent] of patch-here + ( ΔPC / 100 )
+    set insecurity [Inseguridad-ent] of patch-here + ( ΔPI / 100 )
 
   ]
 
@@ -282,7 +282,9 @@ to choose-market
   set audits 0
   if (machine-learning?)[
     if (ticks > 0 and ticks mod 12 = 0)[
-      (r:putagentdf "newdata" employers "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
+      ;(r:putagentdf "newdata" employers "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "Corrupción" "Inseguridad")
+      (r:putagentdf "newdata" employers "mh_col" "ambito2" "anios_esc" "c_ocu11c" "ing7c" "t_loc" "eda" "ent" "tax" "corruption" "insecurity")
+      ;r:eval "write.csv(newdata, 'D:/Dropbox/Research/taxEvasion/evasion/newdata.csv')"
       r:eval "predict <- predict(rf, data = newdata)"
       let probability r:get "round(predict$predictions, 3)"
 
@@ -314,7 +316,7 @@ to declaration
 
   ; Formal employers declares payroll*, where 0 < payroll* <= 1
   ask employers with [mh_col = 1][
-    let β 1 - Inseguridad                             ; Public goods efficiency
+    let β 1 - insecurity                             ; Public goods efficiency
     let θ tax / 100
     let ρ risk-aversion-ρ
     let I payroll
@@ -452,7 +454,7 @@ to age-increase
     ask employers [
       set eda eda + 1
       if (eda > 100)[
-        set eda random-normal 37 6
+        set eda ceiling random-normal 37 6
       ]
     ]
   ]
@@ -1514,7 +1516,7 @@ SWITCH
 126
 machine-learning?
 machine-learning?
-0
+1
 1
 -1000
 
