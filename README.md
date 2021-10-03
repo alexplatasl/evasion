@@ -1,14 +1,12 @@
----
-bibliography: references.bib
----
-
 ## An agent-based simulation assisted by machine learning for the analysis of payroll tax evasion
 
 Alejandro Platas-López & Alejandro Guerra-Hernández
 
 ### Introduction
 
-Tax evasion is an illegal and intentional activity taken by individuals to reduce their legally due tax obligations[@alm2011]. With the large amount of data available in the National Institute of Statistics and Geography, this model introduces an agent-based model and simulation linked to a machine-learning model for the analysis of payroll tax evasion, a kind of tax that employers must paid on the wages and salaries of employees.
+Tax evasion is an illegal and intentional activity taken by individuals to reduce their legally due tax obligations[[1]][alm2011]. With the large amount of data available in the National Institute of Statistics and Geography, this model introduces an agent-based model and simulation linked to a machine-learning model for the analysis of payroll tax evasion, a kind of tax that employers must paid on the wages and salaries of employees.
+
+[alm2011]: J. Alm, «Measuring, explaining, and controlling tax evasion: lessons from theory, experiments, and field studies,» International Tax and Public Finance, pp. 54-77, 2011.
 
 Each state has autonomy over the way in which the payroll tax is collected. Therefore, to model these different fiscal scenarios and their effects, an explicit representation of the space is made through a Geographic Information System with hexagonal tessellation. The effects of quality in the provision of public goods, on tax compliance are also explored.
 
@@ -90,3 +88,5 @@ Configure the R extention appropriately.
 ##### Submodels
 
 ### References
+
+<a id="1">[1]</a> J. Alm, «Measuring, explaining, and controlling tax evasion: lessons from theory, experiments, and field studies,» International Tax and Public Finance, pp. 54-77, 2011.
