@@ -1212,7 +1212,7 @@ Ratio
 10.0
 true
 true
-"set-plot-x-range 0 120\nset-plot-y-range 0 1" ""
+"set-plot-x-range 0 120\nset-plot-y-range 0 0.3" ""
 PENS
 "Total" 1.0 0 -7500403 true "" "plot ETE"
 "Formal" 1.0 0 -13345367 true "" "plot ETE-formal"
@@ -1287,7 +1287,7 @@ SLIDER
 ΔPI
 -15
 15
-0.0
+15.0
 1
 1
 %
