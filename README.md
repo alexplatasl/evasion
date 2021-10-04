@@ -56,7 +56,7 @@ Analyze the effect of institutional determinants on payroll tax evasion in Mexic
 | Auditor  | `Float` | penalty-collected; tax-collected                             |
 | Auditor  | `Int`   | ent-auditor                                                  |
 | Employer | `Bool`  | audit?; audited?; formal-or-informal (mh_col)                |
-| Employer | `Float` | corruption; declared-tax; insecurity; payroll; payroll*; prob-formal; production; risk-aversion-ρ; tax; undeclared-payroll; undeclared-tax; α-s; δ |
+| Employer | `Float` | corruption; declared-tax; insecurity; payroll; payroll*; prob-formal; production; risk-aversion-ρ; tax; undeclared-payroll; undeclared-tax; ![eqn-27](https://latex.codecogs.com/svg.image?\alpha_S); ![eqn-27](https://latex.codecogs.com/svg.image?\delta) |
 | Employer | `Int`   | eda (age); business-size (ambito2); education (anios_esc); economic-activity (c_ocu11c); state (ent); income (ing7c); size-of-region (t_loc); type-of-taxpayer |
 
 **Table 1**: State variables by agent. In parentheses, the name of attribute in the INEGI dataset.
@@ -132,30 +132,30 @@ ENCIG is a biannual survey in which people are asked about the top 3 (three) pro
 The dataset collected in this way, gives a matrix of size *71833 x 10*, where the proportion of formal employers is 60.57%. A fast implementation of Random Forest was chosen to learn from data because it provides a fast model fitting and evaluating, is robust to outliers, can deal with simple linear and complicated nonlinear associations, and produces competitive prediction accuracy. To tune the hyperparameters and evaluate the performance of the model, a cross-validation with *k=10* folds was carried out. The final hyperparameters values were *mtry=20*, *ntrees=100*, and *nodesize = 1*. That setting gets an accuracy of 83.79%, which is considered good to avoid overfitting. The trained model will be available to employers during the simulation.
 
 From the resulting preprocessed ENOE data a sampling is performed using the local pivot method, which effectively generates a balanced sample data set. Selected attributes to generate the balanced sample were the state, the employer's classification by belonging to the formal or informal sector, and the size of the employer's economic unit. This ensures that the employers in the model reflect the actual proportions of the Mexican labor market. The size of the selected sample corresponds to the scale 1 to 2000.
-At time *t=0*, of every simulation run, *N=1337* employers are initialized and distributed on each state according to the sample dataset. 32 auditors are also initialized representing each state tax authority. Some state variables are initialized by a submodel, either deterministic or random, while some others are based on data as shown in Table 2.
+At time ![eqn](https://latex.codecogs.com/svg.image?t=0), of every simulation run, ![eqn](https://latex.codecogs.com/svg.image?N=1337) employers are initialized and distributed on each state according to the sample dataset. 32 auditors are also initialized representing each state tax authority. Some state variables are initialized by a submodel, either deterministic or random, while some others are based on data as shown in Table 2.
 
 | Agent    | Initialization | Attributes                                                   |
 | -------- | -------------- | ------------------------------------------------------------ |
 | Auditor  | Deterministic  | penalty-collected; tax-collected                             |
 | Auditor  | Random         | ent-auditor; my-employers                                    |
 | Employer | Data base      | ambito2; anios_esc; c_ocu11c; corruption; eda; ent; ing7c; insecurity; mh_col; t_loc; tax |
-| Employer | Deterministic  | audit?; audited?; declared-tax; payroll; payroll*; risk-aversion-ρ; type-of-taxpayer; undeclared-payroll; undeclared-tax; α-s; δ |
+| Employer | Deterministic  | audit?; audited?; declared-tax; payroll; payroll*; risk-aversion-ρ; type-of-taxpayer; undeclared-payroll; undeclared-tax; ![eqn-27](https://latex.codecogs.com/svg.image?\alpha_S); ![eqn-27](https://latex.codecogs.com/svg.image?\delta) |
 | Employer | Random         | prob-formal; production                                      |
 
 **Table 2**: Initialization of state variables.
 
 In the same way, input parameters of simulation were adopted from literature, data base or through experimentation. Table 3 shows the initial values of the baseline model. The user interface also has other input parameters, one of them allows to switch “on” and “off” the machine learning model.
 
-| Parameter | Description                                    | Value | Initialization  |
-| --------- | ---------------------------------------------- | ----- | --------------- |
-| π         | Penalty rate                                   | 0.75  | Data base       |
-| α         | Audit probability                              | 0.05  | Experimentation |
-| ε-ap      | Effectiveness of audit process                 | 0.75  | Experimentation |
-| ε-tc      | Effectiveness of tax collection                | 0.7   | Literature      |
-| Δθ        | Variation in tax rate                          | 0     | Data base       |
-| ΔPI       | Variation in perceived insecurity              | 0     | Data base       |
-| ΔPC       | Variation in perceived corruption              | 0     | Data base       |
-| τ         | Threshold for formal or informal sector choice | 0.5   | Literature      |
+| Parameter                                                    | Description                                    | Value | Initialization  |
+| ------------------------------------------------------------ | ---------------------------------------------- | ----- | --------------- |
+| ![eqn-27](https://latex.codecogs.com/svg.image?\pi)          | Penalty rate                                   | 0.75  | Data base       |
+| ![eqn-27](https://latex.codecogs.com/svg.image?\alpha)       | Audit probability                              | 0.05  | Experimentation |
+| ![eqn-27](https://latex.codecogs.com/svg.image?\epsilon_{AP}) | Effectiveness of audit process                 | 0.75  | Experimentation |
+| ![eqn-27](https://latex.codecogs.com/svg.image?\epsilon_{TC}) | Effectiveness of tax collection                | 0.7   | Literature      |
+| ![eqn-27](https://latex.codecogs.com/svg.image?\Delta\theta) | Variation in tax rate                          | 0     | Data base       |
+| ![eqn-27](https://latex.codecogs.com/svg.image?\Delta{PI})   | Variation in perceived insecurity              | 0     | Data base       |
+| ![eqn-27](https://latex.codecogs.com/svg.image?\Delta{PC})   | Variation in perceived corruption              | 0     | Data base       |
+| ![eqn-27](https://latex.codecogs.com/svg.image?\tau)         | Threshold for formal or informal sector choice | 0.5   | Literature      |
 
 **Table 3**: Input parameter initialization of baseline model.
 
@@ -167,7 +167,7 @@ The model does not use input data to represent time-varying processes.
 
 1. A Geographical Information System layer is loaded. Each polygon is a hexagonal tessellation of the corresponding Mexican state.
 
-2. *N=1337* employers are generated and initialized with information of the data base and moved to their corresponding state.
+2. ![eqn](https://latex.codecogs.com/svg.image?N=1337) employers are generated and initialized with information of the data base and moved to their corresponding state.
 
 3. Auditors are generated and located to their assigned state.
 
@@ -177,13 +177,13 @@ The model does not use input data to represent time-varying processes.
 
    ![eqn-5](https://latex.codecogs.com/svg.image?f(x)~x^{-1-\gamma})
 
-6. Where γ is known as the Pareto exponent and estimated to be *≈3/2* to characterize a capitalist economy.
+6. Where ![eqn](https://latex.codecogs.com/svg.image?\gamma) is known as the Pareto exponent and estimated to be ![eqn](https://latex.codecogs.com/svg.image?\approx{3/2}) to characterize a capitalist economy.
 
-7. *x* are the values generated by a normal distribution function with mean 2 and standard deviation 0.2 for informal employers and 0.3 for the formal ones.
+7. ![eqn](https://latex.codecogs.com/svg.image?x\sim{N}(\mu,\sigma^2)) are the values generated by a normal distribution function with mean ![eqn](https://latex.codecogs.com/svg.image?\mu=2) and standard deviation ![eqn](https://latex.codecogs.com/svg.image?\sigma^2=0.2) for informal employers and ![eqn](https://latex.codecogs.com/svg.image?\sigma^2=0.3) for the formal ones.
 
-8. To assign a fixed monthly production value to each employer. Generated power law values are multiplied by 23 in the case of in-formal employers and 50 for the formal. Those quantities generate a perfectly mixed Pareto distribution according to the basic prin-ciples and preserve the participation of the informal economy in Mexican GDP.
+8. To assign a fixed monthly production value to each employer. Generated power law values are multiplied by 23 in the case of informal employers and 50 for the formal. Those quantities generate a perfectly mixed Pareto distribution according to the basic principles and preserve the participation of the informal economy in Mexican GDP.
 
-9. For simplicity, it is assumed that each employer allocates 30 percent of the value of production to payroll *W*. The share of wages in Mexican GDP is between 30 and 40%.
+9. For simplicity, it is assumed that each employer allocates 30 percent of the value of production to payroll ![eqn](https://latex.codecogs.com/svg.image?W). The share of wages in Mexican GDP is between 30 and 40%.
 
 10. At the beginning of the simulation, it is assumed that non-informal employers declare all the tax, declared payroll ![eqn-10](https://latex.codecogs.com/svg.image?W^{*}=W)
 
@@ -198,11 +198,42 @@ The model does not use input data to represent time-varying processes.
 16. Let ![eqn-16](https://latex.codecogs.com/svg.image?\epsilon_{AP}) and  ![eqn-16](https://latex.codecogs.com/svg.image?\epsilon_{TC}) the effectiveness of audit process and tax collection respectively.
 17. Let ![eqn-17](https://latex.codecogs.com/svg.image?\alpha) the true audit probability and ![eqn-17](https://latex.codecogs.com/svg.image?\alpha_S) the subjective audit probability known to the employer.
 18. Let ![eqn-18](https://latex.codecogs.com/svg.image?\delta=0.1), the updating parameter for ![eqn-18](https://latex.codecogs.com/svg.image?\alpha_S).
-19. If an employer is audited in a specific period, subjective audit probability becomes 1.
+19. If an employer is audited in a specific period, subjective audit probability becomes ![eqn](https://latex.codecogs.com/svg.image?1).
 20. In each period (if not audited again) ![eqn-20](https://latex.codecogs.com/svg.image?\alpha_S) decreases in ![eqn-20](https://latex.codecogs.com/svg.image?\delta) amount until ![eqn-20](https://latex.codecogs.com/svg.image?\alpha_S=\alpha).
-21. Each period, employers calculate the amount of taxes to declare voluntarily ![eqn-21](https://latex.codecogs.com/svg.image?X^*), applying the expected utility maximization procedure adopted by Allingham and Sandmo. Let lower bound:
+21. Each period, employers calculate the amount of taxes to declare voluntarily ![eqn-21](https://latex.codecogs.com/svg.image?X^*), applying the expected utility maximization procedure adopted by Allingham and Sandmo (1972). Let lower bound:
 
+![eqn-21](./eqns/Eqn21.svg)
 
+22. And the upper bound:
+
+![eqn-22](./eqns/Eqn22.svg)
+
+23. If the subjective audit probability ![eqn-23](https://latex.codecogs.com/svg.image?\alpha_S) exceeds the upper limit in submodel 22, employer becomes fully tax compliant, that is, ![eqn-23](https://latex.codecogs.com/svg.image?X^{*}=W\theta), and when ![eqn-23](https://latex.codecogs.com/svg.image?\alpha_S) falls below the lower bound in submodel 21, the employer fully evades, that is ![eqn-23](https://latex.codecogs.com/svg.image?X^{*}=0).
+
+24. For ![eqn-24](https://latex.codecogs.com/svg.image?\alpha_S) in the range for an inner solution, employer voluntarily declares:
+
+    ![eqn-24](./eqns/Eqn24.svg)
+
+25. The tax authority collects payroll taxes that employers voluntarily declared.
+
+26. The tax authority carries out audits with a random probability of α and a level of effectiveness ![eqn-26](https://latex.codecogs.com/svg.image?\epsilon_{AP}).
+
+27. If an evader is detected the undeclared tax is collected and a penalty rate ![eqn-27](https://latex.codecogs.com/svg.image?\pi) is applied over the undeclared tax.
+
+28. In each period, employers have a probability of dying, following a Weibull quantile derivation function:
+
+    ![eqn-28](https://latex.codecogs.com/svg.image?Q(p)=\lambda\left[\frac{1}{1-p}\right]^{\frac{1}{k}})
+
+29. Where ![eqn-29](https://latex.codecogs.com/svg.image?\lambda=0.019) and ![eqn-29](https://latex.codecogs.com/svg.image?k=0.479) are the scale and shape parameter respectively.
+30. It is assumed that when an employer dies, someone else takes their place with the same attributes, except for age, which is generated according to:
+
+![eqn-30](https://latex.codecogs.com/svg.image?eda=\lfloor X\rfloor)
+
+![eqn-30](https://latex.codecogs.com/svg.image?X\sim{N}(\mu,\sigma^{2})\sim{N}(37,6))
+
+31. At each time ![eqn-31](https://latex.codecogs.com/svg.image?t), the observed output Extent of Tax Evasion is calculated as follows:
+
+    ![eqn-31](https://latex.codecogs.com/svg.image?ETE_t=1-\frac{\sum_{i=1}^{N}W^{*}}{\sum_{i=1}^{N}W})
 
 ### References
 
