@@ -192,7 +192,7 @@ The model does not use input data to represent time-varying processes.
 13. Informal employers do not declare taxes.
 14. By social norm, employers modify their risk aversion ![eqn-13](https://latex.codecogs.com/svg.image?\rho) according to their age as follows:
 
-![eqn-14](.\eqns\Eqn14.svg)
+![eqn-14](./eqns/Eqn14.svg)
 
 15. Let ![eqn-15](https://latex.codecogs.com/svg.image?\beta) the perceived public goods efficiency, and ![eqn-15](https://latex.codecogs.com/svg.image?\pi) the penalty rate.
 16. Let ![eqn-16](https://latex.codecogs.com/svg.image?\epsilon_{AP}) and  ![eqn-16](https://latex.codecogs.com/svg.image?\epsilon_{TC}) the effectiveness of audit process and tax collection respectively.
