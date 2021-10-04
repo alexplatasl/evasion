@@ -2,7 +2,7 @@
 
 Alejandro Platas-López & Alejandro Guerra-Hernández
 
-![interface](D:\Dropbox\Research\taxEvasion\evasion\interface.gif)
+![interface](./interface.gif)
 
 ### Introduction
 
