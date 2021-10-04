@@ -2,6 +2,8 @@
 
 Alejandro Platas-López & Alejandro Guerra-Hernández
 
+![interface](D:\Dropbox\Research\taxEvasion\evasion\interface.gif)
+
 ### Introduction
 
 Tax evasion is an illegal and intentional activity taken by individuals to reduce their legally due tax obligations (Alm, 2011). With the large amount of data available in the National Institute of Statistics and Geography, this model introduces an agent-based model and simulation linked to a machine-learning model for the analysis of payroll tax evasion, a kind of tax that employers must paid on the wages and salaries of employees.
