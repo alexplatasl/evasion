@@ -192,14 +192,14 @@ The model does not use input data to represent time-varying processes.
 13. Informal employers do not declare taxes.
 14. By social norm, employers modify their risk aversion ![eqn-13](https://latex.codecogs.com/svg.image?\rho) according to their age as follows:
 
-![eqn-13](https://latex.codecogs.com/svg.image?\rho&space;~&space;\left\{\begin{matrix}U(0.0,0.25)&space;&&space;\text{if}&space;&&space;&space;&space;&space;&&space;&space;\text{age}<&space;&&space;34&space;&space;\\U(0.25,0.5)&space;&&space;\text{if}&space;&&space;34&space;&&space;<\text{age}<&space;&&space;51&space;\\U(0.5,0.75)&space;&&space;\text{if}&space;&&space;51&space;&&space;<\text{age}<&space;&&space;67&space;&space;\\U(0.75,1.0)&space;&&space;\text{if}&space;&&space;&space;&space;&space;&&space;&space;\text{age}>&space;&&space;67&space;&space;\\\end{matrix}\right.)
+![eqn-14](.\eqns\Eqn14.svg)
 
 15. Let ![eqn-15](https://latex.codecogs.com/svg.image?\beta) the perceived public goods efficiency, and ![eqn-15](https://latex.codecogs.com/svg.image?\pi) the penalty rate.
 16. Let ![eqn-16](https://latex.codecogs.com/svg.image?\epsilon_{AP}) and  ![eqn-16](https://latex.codecogs.com/svg.image?\epsilon_{TC}) the effectiveness of audit process and tax collection respectively.
 17. Let ![eqn-17](https://latex.codecogs.com/svg.image?\alpha) the true audit probability and ![eqn-17](https://latex.codecogs.com/svg.image?\alpha_S) the subjective audit probability known to the employer.
 18. Let ![eqn-18](https://latex.codecogs.com/svg.image?\delta=0.1), the updating parameter for ![eqn-18](https://latex.codecogs.com/svg.image?\alpha_S).
 19. If an employer is audited in a specific period, subjective audit probability becomes 1.
-20. In each period (if not audited again) ![eqn-20](https://latex.codecogs.com/svg.image?\alpha_S) decreases in ![eqn-20](https://latex.codecogs.com/svg.image?\delta) amount until ![eqn-20](https://latex.codecogs.com/svg.image?\alpha_S = \alpha).
+20. In each period (if not audited again) ![eqn-20](https://latex.codecogs.com/svg.image?\alpha_S) decreases in ![eqn-20](https://latex.codecogs.com/svg.image?\delta) amount until ![eqn-20](https://latex.codecogs.com/svg.image?\alpha_S=\alpha).
 21. Each period, employers calculate the amount of taxes to declare voluntarily ![eqn-21](https://latex.codecogs.com/svg.image?X^*), applying the expected utility maximization procedure adopted by Allingham and Sandmo. Let lower bound:
 
 
